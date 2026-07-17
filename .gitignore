@@ -20,6 +20,9 @@ assets/*
 .env
 *.local.properties
 
+#db
+*.local.sql
+
 # OS junk
 .DS_Store
 Thumbs.db

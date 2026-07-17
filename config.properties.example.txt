@@ -1,0 +1,3 @@
+db.url=jdbc:sqlserver://localhost:1433;databaseName=NewsAppDb
+db.user=news_app
+db.password=<SET_LOCALLY>	
