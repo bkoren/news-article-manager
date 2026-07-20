@@ -18,7 +18,7 @@ assets/*
 
 # Credentials / local config
 .env
-*.local.properties
+config.properties
 
 #db
 *.local.sql
