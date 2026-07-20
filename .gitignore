@@ -17,8 +17,8 @@ assets/*
 !assets/.gitkeep
 
 # Credentials / local config
+config.properties
 .env
-*.local.properties
 
 #db
 *.local.sql
