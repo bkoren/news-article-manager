@@ -22,6 +22,7 @@ config.properties
 
 #db
 *.local.sql
+seed.sql
 
 # OS junk
 .DS_Store
