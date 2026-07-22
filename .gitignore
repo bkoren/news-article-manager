@@ -22,7 +22,7 @@ config.properties
 
 #db
 *.local.sql
-seed.sql
+db/seed.sql
 
 # OS junk
 .DS_Store
