@@ -24,6 +24,9 @@ config.properties
 *.local.sql
 db/seed.sql
 
+# Claude
+CLAUDE.md
+
 # OS junk
 .DS_Store
 Thumbs.db
