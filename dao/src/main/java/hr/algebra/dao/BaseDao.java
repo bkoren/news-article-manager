@@ -13,7 +13,6 @@ public abstract class BaseDao<T> {
     protected List<T> executeQuery(String call) throws SQLException {
         List<T> result = new ArrayList<>();
 
-        //noinspection SqlSourceToSinkFlow
         try (
             Connection connection = ConnectionProvider.getInstance().getConnection();
             CallableStatement statement = connection.prepareCall(call);
@@ -25,5 +24,15 @@ public abstract class BaseDao<T> {
         }
 
         return result;
+    }
+
+    protected int executeUpdate(String call, StatementBinder binder) throws SQLException {
+        try (
+            Connection connection = ConnectionProvider.getInstance().getConnection();
+            CallableStatement statement = connection.prepareCall(call);
+        ) {
+            binder.bind(statement);
+            return statement.executeUpdate();
+        }
     }
 }
