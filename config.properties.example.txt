@@ -1,3 +1,5 @@
-db.url=jdbc:sqlserver://localhost:1433;databaseName=NewsAppDb
+db.url=jdbc:sqlserver://localhost:1433
+db.databaseName=NewsAppDb
 db.user=news_app
-db.password=<SET_LOCALLY>	
+db.password=<SET_LOCALLY>
+db.trustServerCertification=true	

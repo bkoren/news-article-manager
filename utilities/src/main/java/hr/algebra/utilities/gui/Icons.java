@@ -1,6 +1,6 @@
 package hr.algebra.utilities.gui;
 
-import hr.algebra.utilities.Exceptions.ConfigException;
+import hr.algebra.utilities.config.ConfigException;
 import javax.swing.ImageIcon;
 import java.net.URL;
 import java.util.HashMap;

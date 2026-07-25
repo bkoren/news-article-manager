@@ -1,11 +1,9 @@
 package hr.algebra.utilities.config;
 
-import hr.algebra.utilities.Exceptions.ConfigException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Optional;
 import java.util.Properties;
 
 public final class Config {
