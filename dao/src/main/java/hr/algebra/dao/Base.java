@@ -7,7 +7,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class BaseDao<T> {
+public abstract class Base<T> {
     protected abstract T map(ResultSet rs) throws SQLException;
 
     protected List<T> executeQuery(String call) throws SQLException {
