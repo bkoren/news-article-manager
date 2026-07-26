@@ -1,15 +1,13 @@
 USE NewsAppDb
 GO
 
----------------------- Article -------------------------
----------------------- CREATE -------------------------
-CREATE OR ALTER PROC [dbo].[p_Article_Insert]
+CREATE OR ALTER PROC [dbo].[p_Article_Create]
     @SourceID    INT,
     @Title       NVARCHAR(300),
     @Description NVARCHAR(MAX),
     @Link        NVARCHAR(500),
     @PublishedAt DATETIME,
-    @ImagePath   NVARCHAR(300)	
+    @ImagePath   NVARCHAR(300)
 AS
 BEGIN
     SET NOCOUNT ON;                      
@@ -19,56 +17,30 @@ BEGIN
     VALUES
         (@SourceID, @Title, @Description, @Link, @PublishedAt, @ImagePath);
 
-    RETURN CAST(SCOPE_IDENTITY() AS INT);       
+	SELECT CAST(SCOPE_IDENTITY() AS INT);          
 END;
 GO
 
----------------------- READ -------------------------
-CREATE OR ALTER PROC [dbo].[p_Article_GetById]
-    @ArticleID INT
-AS
-BEGIN 
-    SET NOCOUNT ON;
-
-    SELECT 
-		[IDArticle], 
-		[SourceID], 
-		[Title], 
-		[Description],
-        [Link], 
-		[PublishedAt], 
-		[ImagePath]
-    FROM 
-		[dbo].[Article]
-    WHERE
-		[IDArticle] = @ArticleID;
-		
-END;
-GO
-
----------------------- READ -------------------------
-CREATE OR ALTER PROC [dbo].[p_Article_GetAll]
+CREATE OR ALTER PROC [dbo].[p_Article_Read]
 AS
 BEGIN
     SET NOCOUNT ON;
 
     SELECT  [a].[IDArticle],
             [a].[Title],
-            [s].[Name] AS SourceName,  
             [a].[PublishedAt],
             [a].[SourceID],
-            [a].[ImagePath]
+            [a].[ImagePath],
+            [s].[Name] AS SourceName
     FROM        
 		[dbo].[Article] AS a
-    INNER JOIN  
+    JOIN  
 		[dbo].[Source] AS s ON [s].[IDSource] = [a].[SourceID]
     ORDER BY    
-		[a].[PublishedAt] DESC;       
-    
+		[a].[PublishedAt] DESC;           
 END;
 GO
 
----------------------- UPDATE -------------------------
 CREATE OR ALTER PROC [dbo].[p_Article_Update]
     @ArticleID   INT,
     @SourceID	 INT,
@@ -91,15 +63,9 @@ BEGIN
         [ImagePath]   = @ImagePath
     WHERE 
 		[IDArticle] = @ArticleID;  
-    
-	IF @@ROWCOUNT = 0 
-	RETURN 1;
-	
-	RETURN 0;
 END;
 GO
 
----------------------- DELETE -------------------------
 CREATE OR ALTER PROC [dbo].[p_Article_Delete]
     @ArticleID INT,
     @ImagePath NVARCHAR(300) OUTPUT       
@@ -112,10 +78,7 @@ BEGIN
 	FROM 
 		[dbo].[Article] 
 	WHERE 
-		[IDArticle] = @ArticleID;
-
-    IF @@ROWCOUNT = 0 
-	RETURN 1;           
+		[IDArticle] = @ArticleID;          
    
     BEGIN TRAN;
 
@@ -130,15 +93,11 @@ BEGIN
 		ROLLBACK TRAN;
 
 		THROW;
-	END CATCH;
-
-    RETURN 0;
+	END CATCH;    
 END;
 GO
 
----------------------- Author -------------------------
----------------------- CREATE -------------------------
-CREATE OR ALTER PROC [dbo].[p_Author_Insert]
+CREATE OR ALTER PROC [dbo].[p_Author_Create]
     @Name NVARCHAR(200)
 AS
 BEGIN
@@ -151,24 +110,7 @@ BEGIN
 END;
 GO
 
----------------------- READ -------------------------
-CREATE OR ALTER PROC [dbo].[p_Author_GetById]
-    @AuthorID INT
-AS
-BEGIN
-    SET NOCOUNT ON;
-
-    SELECT [IDAuthor], 
-		[Name]
-    FROM
-		[dbo].[Author]
-    WHERE
-		[IDAuthor] = @AuthorID;   
-END;
-GO
-
----------------------- READ -------------------------
-CREATE OR ALTER PROC [dbo].[p_Author_GetAll]
+CREATE OR ALTER PROC [dbo].[p_Author_Read]
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -178,39 +120,27 @@ BEGIN
     FROM 
 		[dbo].[Author]
     ORDER BY 
-		[Name];                         
-		
+		[Name];                         		
 END;
 GO
 
----------------------- UPDATE -------------------------
 CREATE OR ALTER PROC [dbo].[p_Author_Update]
     @AuthorID INT,
     @Name     NVARCHAR(200)
 AS
 BEGIN
-    SET NOCOUNT ON;
-
     UPDATE [dbo].[Author]
     SET 
 		[Name] = @Name
     WHERE 
 		[IDAuthor] = @AuthorID;
-
-	IF @@ROWCOUNT = 0 
-	RETURN 1;
-
-    RETURN 0;
 END;
 GO
 
----------------------- DELETE -------------------------
 CREATE OR ALTER PROC [dbo].[p_Author_Delete]
     @AuthorID INT
 AS
-BEGIN
-    SET NOCOUNT ON;
-   
+BEGIN     
 	BEGIN TRAN;
 		
 	BEGIN TRY;		
@@ -223,16 +153,11 @@ BEGIN
 		ROLLBACK TRAN;
 
 		THROW;
-	END CATCH;
-
-    RETURN 0;
-
+	END CATCH;  
 END;
 GO
 
----------------------- Category -------------------------
----------------------- CREATE -------------------------
-CREATE OR ALTER PROC [dbo].[p_Category_Insert]
+CREATE OR ALTER PROC [dbo].[p_Category_Create]
 	@Name NVARCHAR(200)
 AS
 BEGIN
@@ -241,7 +166,7 @@ BEGIN
 	INSERT INTO [dbo].[Category] ([Name])
 	VALUES (@Name);
 
-	RETURN 0;
+	SELECT CAST(SCOPE_IDENTITY() AS INT);
 END;
 GO
 

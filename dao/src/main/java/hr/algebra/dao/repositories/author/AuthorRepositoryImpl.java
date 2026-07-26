@@ -19,12 +19,34 @@ public class AuthorRepositoryImpl extends Base<Author> implements AuthorReposito
 
     @Override
     public List<Author> getAll() throws SQLException {
-        return executeQuery("{call p_Author_GetAll}");
+        return executeQuery("{call p_Author_Read}");
     }
 
     @Override
-    public int save(Author author) throws SQLException {
-        return executeInsert("{call p_Author_Insert (?)}",
-                statement -> statement.setString(1, author.getName()));
+    public int create(Author author) throws SQLException {
+         return executeInsert(
+                 "{call p_Author_Create (?)}",
+                 statement -> statement.setString(1, author.getName())
+
+         );
+    }
+
+    @Override
+    public int delete(int authorId) throws SQLException {
+        return executeUpdate(
+                "{call p_Author_Delete (?)}",
+                statement -> statement.setInt(1, authorId)
+        );
+    }
+
+    @Override
+    public int update(Author author) throws SQLException {
+        return executeUpdate(
+                "{call p_Author_Update (?, ?)}",
+                statement -> {
+                    statement.setInt(1, author.getAuthorId());
+                    statement.setString(2, author.getName());
+                }
+        );
     }
 }
