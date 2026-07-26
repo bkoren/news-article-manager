@@ -255,10 +255,7 @@ BEGIN
 END;
 GO
 
-
----------------------- Source -------------------------
----------------------- CREATE -------------------------
-CREATE OR ALTER PROC [dbo].[p_Source_Insert]
+CREATE OR ALTER PROC [dbo].[p_Source_Create]
 	@Name NVARCHAR(200),
 	@FeedUrl NVARCHAR(500)
 AS
@@ -268,30 +265,11 @@ BEGIN
 	INSERT INTO [dbo].[Source] ([Name], [FeedUrl])
 	VALUES (@Name, @FeedUrl);
 
-	RETURN 0;
+	RETURN CAST(SCOPE_IDENTITY() AS INT);
 END;
 GO
 
----------------------- READ -------------------------
-CREATE OR ALTER PROC [dbo].[p_Source_GetById]
-	@SourceID INT
-AS
-BEGIN
-	SET NOCOUNT ON;
-
-	SELECT 
-		[Name],
-		[FeedUrl]
-	FROM 
-		[dbo].[Source]
-	WHERE 
-		[IDSource] = @SourceID;
-
-END;
-GO
-
----------------------- READ -------------------------
-CREATE OR ALTER PROC [dbo].[p_Source_GetAll]
+CREATE OR ALTER PROC [dbo].[p_Source_Read]
 AS
 BEGIN
 	SET NOCOUNT ON;
@@ -303,11 +281,9 @@ BEGIN
 		[dbo].[Source]
 	ORDER BY
 		[Name];
-
 END;
 GO
 
----------------------- UPDATE -------------------------
 CREATE OR ALTER PROC [dbo].[p_Source_Update]
 	@SourceID INT,
 	@Name NVARCHAR(200),
@@ -322,26 +298,21 @@ BEGIN
 		[FeedUrl] = @FeedUrl
 	WHERE 
 		[IDSource] = @SourceID
-
-	RETURN 0;
-
 END;
 GO
 
----------------------- DELETE -------------------------
 CREATE OR ALTER PROC [dbo].[p_Source_Delete]
-	@SourceID INT
+	@SourceID INT,
+	@result INT OUTPUT
 AS
 BEGIN
 	SET NOCOUNT ON;
 
 	IF EXISTS (SELECT 1 FROM [dbo].[Article] WHERE [SourceID] = @SourceID)
-	RETURN 2;
+	SET @result = 2;
 
 	DELETE FROM [dbo].[Source] WHERE [IDSource] = @SourceID;
-
-	RETURN 0;
-
+	SET @result = 0;	
 END;
 GO
 

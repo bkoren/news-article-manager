@@ -3,12 +3,8 @@ package hr.algebra.dao.models;
 import java.util.Objects;
 
 public class Author {
-    private int authorId;
+    private final int authorId;
     private String name;
-
-    public Author(String name) {
-        this.name = name;
-    }
 
     public Author(int authorId, String name) {
         this.authorId = authorId;
@@ -42,6 +38,9 @@ public class Author {
 
     @Override
     public String toString() {
-        return name;
+        return "Author{" +
+                "authorId=" + authorId +
+                ", name='" + name + '\'' +
+                '}';
     }
 }
