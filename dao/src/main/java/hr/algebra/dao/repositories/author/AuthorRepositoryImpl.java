@@ -21,4 +21,10 @@ public class AuthorRepositoryImpl extends Base<Author> implements AuthorReposito
     public List<Author> getAll() throws SQLException {
         return executeQuery("{call p_Author_GetAll}");
     }
+
+    @Override
+    public int save(Author author) throws SQLException {
+        return executeInsert("{call p_Author_Insert (?)}",
+                statement -> statement.setString(1, author.getName()));
+    }
 }

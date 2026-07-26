@@ -7,4 +7,6 @@ import java.util.List;
 
 public interface AuthorRepository {
     List<Author> getAll() throws SQLException;
+
+    int save(Author author) throws SQLException;
 }

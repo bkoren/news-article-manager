@@ -27,6 +27,9 @@ db/seed.sql
 # Claude
 CLAUDE.md
 
+#Tests
+Test
+
 # OS junk
 .DS_Store
 Thumbs.db

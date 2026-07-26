@@ -9,8 +9,7 @@ CREATE OR ALTER PROC [dbo].[p_Article_Insert]
     @Description NVARCHAR(MAX),
     @Link        NVARCHAR(500),
     @PublishedAt DATETIME,
-    @ImagePath   NVARCHAR(300),
-    @NewId       INT OUTPUT              
+    @ImagePath   NVARCHAR(300)	
 AS
 BEGIN
     SET NOCOUNT ON;                      
@@ -20,9 +19,7 @@ BEGIN
     VALUES
         (@SourceID, @Title, @Description, @Link, @PublishedAt, @ImagePath);
 
-    SET @NewId = SCOPE_IDENTITY();       
-
-	RETURN 0;    
+    RETURN CAST(SCOPE_IDENTITY() AS INT);       
 END;
 GO
 
@@ -50,7 +47,7 @@ END;
 GO
 
 ---------------------- READ -------------------------
-CREATE OR ALTER PROCEDURE [dbo].[p_Article_GetAll]
+CREATE OR ALTER PROC [dbo].[p_Article_GetAll]
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -72,7 +69,7 @@ END;
 GO
 
 ---------------------- UPDATE -------------------------
-CREATE OR ALTER PROCEDURE [dbo].[p_Article_Update]
+CREATE OR ALTER PROC [dbo].[p_Article_Update]
     @ArticleID   INT,
     @SourceID	 INT,
     @Title       NVARCHAR(300),
@@ -103,7 +100,7 @@ END;
 GO
 
 ---------------------- DELETE -------------------------
-CREATE OR ALTER PROCEDURE [dbo].[p_Article_Delete]
+CREATE OR ALTER PROC [dbo].[p_Article_Delete]
     @ArticleID INT,
     @ImagePath NVARCHAR(300) OUTPUT       
 AS
@@ -141,21 +138,21 @@ GO
 
 ---------------------- Author -------------------------
 ---------------------- CREATE -------------------------
-CREATE OR ALTER PROCEDURE [dbo].[p_Author_Insert]
+CREATE OR ALTER PROC [dbo].[p_Author_Insert]
     @Name NVARCHAR(200)
 AS
 BEGIN
     SET NOCOUNT ON
 
     INSERT INTO [dbo].[Author] ([Name]) 
-	VALUES (@Name);
-    
-    RETURN 0;
+	VALUES (@Name);    
+
+	SELECT CAST(SCOPE_IDENTITY() AS INT);   
 END;
 GO
 
 ---------------------- READ -------------------------
-CREATE OR ALTER PROCEDURE [dbo].[p_Author_GetById]
+CREATE OR ALTER PROC [dbo].[p_Author_GetById]
     @AuthorID INT
 AS
 BEGIN
@@ -171,7 +168,7 @@ END;
 GO
 
 ---------------------- READ -------------------------
-CREATE OR ALTER PROCEDURE [dbo].[p_Author_GetAll]
+CREATE OR ALTER PROC [dbo].[p_Author_GetAll]
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -187,7 +184,7 @@ END;
 GO
 
 ---------------------- UPDATE -------------------------
-CREATE OR ALTER PROCEDURE [dbo].[p_Author_Update]
+CREATE OR ALTER PROC [dbo].[p_Author_Update]
     @AuthorID INT,
     @Name     NVARCHAR(200)
 AS
@@ -208,7 +205,7 @@ END;
 GO
 
 ---------------------- DELETE -------------------------
-CREATE OR ALTER PROCEDURE [dbo].[p_Author_Delete]
+CREATE OR ALTER PROC [dbo].[p_Author_Delete]
     @AuthorID INT
 AS
 BEGIN

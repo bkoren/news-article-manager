@@ -35,4 +35,19 @@ public abstract class Base<T> {
             return statement.executeUpdate();
         }
     }
+
+    protected int executeInsert(String call, StatementBinder binder) throws SQLException {
+        try(
+            Connection connection = ConnectionProvider.getInstance().getConnection();
+            CallableStatement statement = connection.prepareCall(call);
+        ) {
+            binder.bind(statement);
+
+            try(ResultSet rs = statement.executeQuery()) {
+                if(rs.next()) return rs.getInt(1);
+            }
+
+            return -1;
+        }
+    }
 }
