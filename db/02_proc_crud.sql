@@ -26,12 +26,9 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    SELECT  [a].[IDArticle],
-            [a].[Title],
-            [a].[PublishedAt],
-            [a].[SourceID],
-            [a].[ImagePath],
-            [s].[Name] AS SourceName
+	SELECT
+		[a].*,
+		[s].[Name] AS SourceName     
     FROM        
 		[dbo].[Article] AS a
     JOIN  
@@ -116,7 +113,7 @@ BEGIN
     SET NOCOUNT ON;
 
     SELECT 
-		[IDAuthor], [Name]
+		*
     FROM 
 		[dbo].[Author]
     ORDER BY 
@@ -170,22 +167,7 @@ BEGIN
 END;
 GO
 
----------------------- READ -------------------------
-CREATE OR ALTER PROC [dbo].[p_Category_GetById]
-	@CategoryID INT
-AS
-BEGIN
-	SET NOCOUNT ON;
 
-	SELECT
-		[IDCategory],
-		[Name]
-	FROM
-		[dbo].[Category]
-	WHERE 
-		[IDCategory] = @CategoryID;
-END;
-GO
 
 ---------------------- READ -------------------------
 CREATE OR ALTER PROC [dbo].[p_Category_GetAll]
@@ -265,7 +247,7 @@ BEGIN
 	INSERT INTO [dbo].[Source] ([Name], [FeedUrl])
 	VALUES (@Name, @FeedUrl);
 
-	RETURN CAST(SCOPE_IDENTITY() AS INT);
+	SELECT CAST(SCOPE_IDENTITY() AS INT);
 END;
 GO
 
@@ -275,8 +257,7 @@ BEGIN
 	SET NOCOUNT ON;
 
 	SELECT
-		[Name],
-		[FeedUrl]
+		*
 	FROM
 		[dbo].[Source]
 	ORDER BY
@@ -302,17 +283,16 @@ END;
 GO
 
 CREATE OR ALTER PROC [dbo].[p_Source_Delete]
-	@SourceID INT,
-	@result INT OUTPUT
+	@SourceID INT
 AS
 BEGIN
 	SET NOCOUNT ON;
 
 	IF EXISTS (SELECT 1 FROM [dbo].[Article] WHERE [SourceID] = @SourceID)
-	SET @result = 2;
+	RETURN 2;
 
 	DELETE FROM [dbo].[Source] WHERE [IDSource] = @SourceID;
-	SET @result = 0;	
+	RETURN 0;	
 END;
 GO
 

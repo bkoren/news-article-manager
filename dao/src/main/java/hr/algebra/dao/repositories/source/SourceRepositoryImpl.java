@@ -36,7 +36,10 @@ public class SourceRepositoryImpl extends Base<Source> implements SourceReposito
 
     @Override
     public int delete(int sourceId) throws SQLException {
-        return 0;
+        return executeReturn(
+                "{? = call p_Source_Delete (?)}",
+                statement -> statement.setInt(2, sourceId)
+        );
     }
 
     @Override

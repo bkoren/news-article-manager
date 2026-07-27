@@ -1,9 +1,6 @@
 package hr.algebra.dao;
 
-import java.sql.CallableStatement;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -48,6 +45,20 @@ public abstract class Base<T> {
             }
 
             return -1;
+        }
+    }
+
+    protected int executeReturn(String call, StatementBinder binder) throws SQLException {
+        try (
+            Connection connection = ConnectionProvider.getInstance().getConnection();
+            CallableStatement statement = connection.prepareCall(call);
+        ) {
+            statement.registerOutParameter(1, Types.INTEGER);
+
+            binder.bind(statement);
+            statement.execute();
+
+            return statement.getInt(1);
         }
     }
 }
