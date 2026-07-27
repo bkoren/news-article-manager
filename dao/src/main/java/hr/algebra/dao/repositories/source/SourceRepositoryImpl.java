@@ -19,7 +19,7 @@ public class SourceRepositoryImpl extends Base<Source> implements SourceReposito
     }
 
     @Override
-    public List<Source> getAll() throws SQLException {
+    public List<Source> read() throws SQLException {
         return executeQuery("{call p_Source_Read}");
     }
 

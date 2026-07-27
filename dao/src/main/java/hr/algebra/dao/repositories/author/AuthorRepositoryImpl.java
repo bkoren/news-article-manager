@@ -18,7 +18,7 @@ public class AuthorRepositoryImpl extends Base<Author> implements AuthorReposito
     }
 
     @Override
-    public List<Author> getAll() throws SQLException {
+    public List<Author> read() throws SQLException {
         return executeQuery("{call p_Author_Read}");
     }
 

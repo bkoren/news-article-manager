@@ -167,10 +167,7 @@ BEGIN
 END;
 GO
 
-
-
----------------------- READ -------------------------
-CREATE OR ALTER PROC [dbo].[p_Category_GetAll]
+CREATE OR ALTER PROC [dbo].[p_Category_Read]
 AS
 BEGIN
 	SET NOCOUNT ON;
@@ -186,7 +183,6 @@ BEGIN
 END;
 GO
 
----------------------- UPDATE -------------------------
 CREATE OR ALTER PROC [dbo].[p_Category_Update]
 	@CategoryID INT,
 	@Name NVARCHAR(200)
@@ -200,39 +196,17 @@ BEGIN
 	WHERE
 		[IDCategory] = @CategoryID;
 
-	IF @@ROWCOUNT = 0 
-	RETURN 1;
-	
-	RETURN 0;
-
 END;
 GO
 
----------------------- DELETE -------------------------
 CREATE OR ALTER PROC [dbo].[p_Category_Delete]
 	@CategoryID INT
 AS
 BEGIN
 	SET NOCOUNT ON;
 
-	BEGIN TRAN;
-
-	BEGIN TRY
-		DELETE FROM [dbo].[ArticleCategory] WHERE [CategoryID] = @CategoryID;
-		DELETE FROM [dbo].[Category] WHERE [IDCategory] = @CategoryID;
-
-		COMMIT TRAN;
-	END TRY
-	BEGIN CATCH
-		ROLLBACK TRAN;
-
-		THROW;
-	END CATCH;
-
-	IF @@ROWCOUNT = 0
-	RETURN 1;
-
-	RETURN 0;
+	DELETE FROM [dbo].[ArticleCategory]	 WHERE [CategoryID] = @CategoryID;
+	DELETE FROM [dbo].[Category]		 WHERE [IDCategory] = @CategoryID;
 
 END;
 GO

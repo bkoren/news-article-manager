@@ -6,9 +6,9 @@ import java.sql.SQLException;
 import java.util.List;
 
 public interface SourceRepository {
-    List<Source> getAll() throws SQLException;
+    List<Source> read() throws SQLException;
 
     int create(Source source) throws SQLException;
-    int delete(int sourceId) throws SQLException;
     int update(Source source) throws SQLException;
+    int delete(int sourceId) throws SQLException;
 }

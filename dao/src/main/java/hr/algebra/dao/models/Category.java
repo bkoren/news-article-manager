@@ -2,8 +2,7 @@ package hr.algebra.dao.models;
 
 import java.util.Objects;
 
-public class Category implements Comparable<Category> {
-
+public class Category {
     private final int categoryId;
     private String name;
 
@@ -22,13 +21,6 @@ public class Category implements Comparable<Category> {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    @Override
-    public int compareTo(Category other) {
-        return String.CASE_INSENSITIVE_ORDER.compare(
-                name == null ? "" : name,
-                other.name == null ? "" : other.name);
     }
 
     @Override
