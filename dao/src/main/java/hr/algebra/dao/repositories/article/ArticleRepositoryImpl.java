@@ -2,6 +2,8 @@ package hr.algebra.dao.repositories.article;
 
 import hr.algebra.dao.Base;
 import hr.algebra.dao.models.Article;
+import hr.algebra.dao.models.Author;
+import hr.algebra.dao.models.Category;
 import hr.algebra.dao.models.Source;
 import hr.algebra.dao.repositories.author.AuthorRepository;
 import hr.algebra.dao.repositories.category.CategoryRepository;
@@ -58,7 +60,7 @@ public class ArticleRepositoryImpl extends Base<Article> implements ArticleRepos
 
     @Override
     public int create(Article article) throws SQLException {
-        return executeInsert(
+        int id = executeInsert(
                 "{call p_Article_Create(?, ?, ?, ?, ?, ?)}",
                 statement -> {
                     statement.setInt(1, article.getSourceId());
@@ -69,6 +71,29 @@ public class ArticleRepositoryImpl extends Base<Article> implements ArticleRepos
                     statement.setString(6, article.getImagePath());
                 }
         );
+        List<Author> authors = article.getAuthors();
+        for(Author author: authors) {
+            executeUpdate(
+                "{call p_Article_AddAuthor(?, ?)}",
+                statement -> {
+                    statement.setInt(1, id);
+                    statement.setInt(2, author.getAuthorId());
+                }
+            );
+        }
+
+        List<Category> categories = article.getCategories();
+        for(Category category : categories) {
+            executeUpdate(
+                    "{call p_Article_AddCategory(?, ?)}",
+                    statement -> {
+                        statement.setInt(1, id);
+                        statement.setInt(2, category.getCategoryId());
+                    }
+            );
+        }
+
+        return id;
     }
 
     @Override

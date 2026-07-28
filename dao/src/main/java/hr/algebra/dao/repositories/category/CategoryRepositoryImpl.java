@@ -43,7 +43,7 @@ public class CategoryRepositoryImpl extends Base<Category> implements CategoryRe
         executeUpdate(
             "{call p_Category_Update(?, ?)}",
             statement -> {
-                statement.setInt(1, category.getId());
+                statement.setInt(1, category.getCategoryId());
                 statement.setString(2, category.getName());
             }
         );
