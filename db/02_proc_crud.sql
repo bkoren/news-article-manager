@@ -27,7 +27,13 @@ BEGIN
     SET NOCOUNT ON;
 
 	SELECT
-		*
+		[IDArticle],
+		[SourceID],
+		[Title],
+		[Description],
+		[Link],
+		[PublishedAt],
+		[ImagePath]
     FROM        
 		[dbo].[Article] AS a
     JOIN  
@@ -87,7 +93,7 @@ GO
 
 CREATE OR ALTER PROC [dbo].[p_Article_AddAuthor]
 	@ArticleID INT,
-	@AuthorID INT
+	@AuthorID  INT
 AS
 BEGIN
 	SET NOCOUNT ON;
@@ -131,7 +137,7 @@ END;
 GO
 
 CREATE OR ALTER PROC [dbo].[p_Article_AddCategory]
-	@ArticleID INT,
+	@ArticleID  INT,
 	@CategoryID INT
 AS
 BEGIN
@@ -181,8 +187,10 @@ AS
 BEGIN
     SET NOCOUNT ON
 
-    INSERT INTO [dbo].[Author] ([Name]) 
-	VALUES (@Name);    
+    INSERT INTO [dbo].[Author] 
+		([Name]) 
+	VALUES 
+		(@Name);    
 
 	SELECT CAST(SCOPE_IDENTITY() AS INT);   
 END;
@@ -194,11 +202,11 @@ BEGIN
     SET NOCOUNT ON;
 
     SELECT 
-		*
+		[IDAuthor],
+		[Name]
     FROM 
 		[dbo].[Author]
-    ORDER BY 
-		[Name];                         		
+		
 END;
 GO
 
@@ -241,8 +249,10 @@ AS
 BEGIN
 	SET NOCOUNT ON;
 
-	INSERT INTO [dbo].[Category] ([Name])
-	VALUES (@Name);
+	INSERT INTO [dbo].[Category] 
+		([Name])
+	VALUES 
+		(@Name);
 
 	SELECT CAST(SCOPE_IDENTITY() AS INT);
 END;
@@ -265,8 +275,8 @@ END;
 GO
 
 CREATE OR ALTER PROC [dbo].[p_Category_Update]
-	@CategoryID INT,
-	@Name NVARCHAR(200)
+	@CategoryID	 INT,
+	@Name		 NVARCHAR(200)
 AS
 BEGIN
 	SET NOCOUNT ON;
@@ -301,14 +311,16 @@ END;
 GO
 
 CREATE OR ALTER PROC [dbo].[p_Source_Create]
-	@Name NVARCHAR(200),
-	@FeedUrl NVARCHAR(500)
+	@Name		NVARCHAR(200),
+	@FeedUrl	NVARCHAR(500)
 AS
 BEGIN
 	SET NOCOUNT ON;
 
-	INSERT INTO [dbo].[Source] ([Name], [FeedUrl])
-	VALUES (@Name, @FeedUrl);
+	INSERT INTO [dbo].[Source] 
+		([Name], [FeedUrl])
+	VALUES
+		(@Name, @FeedUrl);
 
 	SELECT CAST(SCOPE_IDENTITY() AS INT);
 END;
@@ -320,18 +332,19 @@ BEGIN
 	SET NOCOUNT ON;
 
 	SELECT
-		*
+		[IDSource],
+		[Name],
+		[FeedUrl]
 	FROM
 		[dbo].[Source]
-	ORDER BY
-		[Name];
+
 END;
 GO
 
 CREATE OR ALTER PROC [dbo].[p_Source_Update]
-	@SourceID INT,
-	@Name NVARCHAR(200),
-	@FeedUrl NVARCHAR(500)
+	@SourceID	INT,
+	@Name		NVARCHAR(200),
+	@FeedUrl	NVARCHAR(500)
 AS
 BEGIN
 	SET NOCOUNT ON;
@@ -358,7 +371,3 @@ BEGIN
 	RETURN 0;	
 END;
 GO
-
-
-
-

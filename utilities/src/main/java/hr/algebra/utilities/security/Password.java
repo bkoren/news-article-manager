@@ -1,14 +1,18 @@
 package hr.algebra.utilities.security;
 
-import java.nio.charset.StandardCharsets;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.security.spec.InvalidKeySpecException;
 import java.util.Base64;
 
 public final class Password {
-    private static final String ALGORITHM = "SHA-256";
+    private static final String ALGORITHM = "PBKDF2WithHmacSHA256";
+    private static final int ITERATIONS = 120_000;
     private static final int SALT_LENGTH = 16;
+    private static final int KEY_LENGTH = 256;
     private static final String SEPARATOR = "$";
 
     private static final SecureRandom RANDOM = new SecureRandom();
@@ -19,7 +23,7 @@ public final class Password {
         byte[] salt = new byte[SALT_LENGTH];
         RANDOM.nextBytes(salt);
 
-        byte[] hashed = hashWithSalt(plainPassword, salt);
+        byte[] hashed = deriveKey(plainPassword, salt);
 
         return Base64.getEncoder().encodeToString(salt)
                 + SEPARATOR
@@ -35,20 +39,25 @@ public final class Password {
         byte[] salt = Base64.getDecoder().decode(parts[0]);
         byte[] expectedHash = Base64.getDecoder().decode(parts[1]);
 
-        byte[] actualHash = hashWithSalt(plainPassword, salt);
+        byte[] actualHash = deriveKey(plainPassword, salt);
 
         return MessageDigest.isEqual(expectedHash, actualHash);
     }
 
-    private static byte[] hashWithSalt(String plainPassword, byte[] salt) {
+    private static byte[] deriveKey(String plainPassword, byte[] salt) {
+        PBEKeySpec spec = new PBEKeySpec(plainPassword.toCharArray(), salt, ITERATIONS, KEY_LENGTH);
         try {
-            MessageDigest instance = MessageDigest.getInstance(ALGORITHM);
-            instance.update(salt);
-
-            return instance.digest(plainPassword.getBytes(StandardCharsets.UTF_8));
+            SecretKeyFactory factory = SecretKeyFactory.getInstance(ALGORITHM);
+            return factory.generateSecret(spec).getEncoded();
         }
         catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException("SHA-256 is not available", e);
+            throw new IllegalStateException(ALGORITHM + " is not available", e);
+        }
+        catch (InvalidKeySpecException e) {
+            throw new IllegalStateException("Invalid key spec for password hashing", e);
+        }
+        finally {
+            spec.clearPassword();
         }
     }
 }

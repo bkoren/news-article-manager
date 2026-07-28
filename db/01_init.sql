@@ -1,4 +1,3 @@
-GO
 
 CREATE TABLE [dbo].[Source] 
 (
@@ -79,13 +78,11 @@ CREATE TABLE [dbo].[User]
     [IDUser]		INT IDENTITY(1,1) NOT NULL,
     [Username]		NVARCHAR(50)      NOT NULL,
     [PasswordHash]	NVARCHAR(255)     NOT NULL,
-    [PasswordSalt]	NVARCHAR(100)     NOT NULL,
     [Role]			NVARCHAR(10)      NOT NULL,
   
 	CONSTRAINT PK_User PRIMARY KEY ([IDUser]),
     CONSTRAINT UQ_User_Username UNIQUE ([Username]),
-    CONSTRAINT CK_User_Role CHECK ([Role] IN (N'ADMIN', N'USER'))
+    CONSTRAINT CK_User_Role CHECK ([Role] IN (N'ADMIN', N'USER')),
+	CONSTRAINT DF_User_Role DEFAULT N'USER' FOR [Role]
 );
 GO
-
-
