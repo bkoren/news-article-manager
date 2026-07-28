@@ -8,72 +8,70 @@
 USE NewsAppDb;
 GO
 
-CREATE OR ALTER PROCEDURE [dbo].[p_User_Register]
-    @Username     NVARCHAR(50),
-    @PasswordHash NVARCHAR(255),
-    @PasswordSalt NVARCHAR(100),
-    @NewId        INT OUTPUT                       
+CREATE OR ALTER PROC [dbo].[p_User_Register]
+	@Username NVARCHAR(50),
+	@PasswordHash NVARCHAR(255)
 AS
 BEGIN
-    SET NOCOUNT ON;
+	SET NOCOUNT ON;
 
-    IF EXISTS (SELECT 1 FROM [dbo].[User] WHERE [Username] = @Username)
-    RETURN 2;                                  
-    
-    INSERT INTO [dbo].[User] ([Username], [PasswordHash], [PasswordSalt], [Role])
-    VALUES (@Username, @PasswordHash, @PasswordSalt, N'USER');
+	INSERT INTO [dbo].[User]
+		([Username], [PasswordHash])
+	VALUES
+		(@Username, @PasswordHash);
 
-    SET @NewId = SCOPE_IDENTITY();
+END;
+GO
 
-    RETURN 0;                                      
+CREATE OR ALTER PROC [dbo].[p_User_Exists]
+	@Username NVARCHAR(50)
+AS
+BEGIN
+	SET NOCOUNT ON;
+		
+	IF EXISTS(SELECT TOP 1 [IDUser] FROM [User] WHERE [Username] = @Username)
+	RETURN 1;
+
+	RETURN 0;
 END;
 GO
 
 CREATE OR ALTER PROCEDURE [dbo].[p_Admin_Register]
     @Username     NVARCHAR(50),
-    @PasswordHash NVARCHAR(255),
-    @PasswordSalt NVARCHAR(100)
+    @PasswordHash NVARCHAR(255)
 AS
 BEGIN    
-    SET NOCOUNT ON;
-
-    IF EXISTS (SELECT 1 FROM [dbo].[User] WHERE [Username] = @Username)
-    RETURN 1;                                  
+    SET NOCOUNT ON;                                 
    
-    INSERT INTO [dbo].[User] ([Username], [PasswordHash], [PasswordSalt], [Role])
-    VALUES (@Username, @PasswordHash, @PasswordSalt, N'ADMIN');
-
-    RETURN 0;                                      
+    INSERT INTO [dbo].[User] 
+		([Username], [PasswordHash], [Role])
+    VALUES 
+		(@Username, @PasswordHash, N'ADMIN');                                     
 END;
 GO
 
-CREATE OR ALTER PROCEDURE [dbo].[p_User_GetByUsername]
-    @Username NVARCHAR(50)
+CREATE OR ALTER PROC [dbo].[p_User_GetByUsername]
+	@Username NVARCHAR(50)
 AS
 BEGIN
-    SET NOCOUNT ON;
+	SET NOCOUNT ON;
 
-    SELECT [IDUser],
-           [Username],
-           [PasswordHash],
-           [PasswordSalt],
-           [Role]
-    FROM 
+	SELECT
+		[IDUser],
+		[Username],
+		[PasswordHash],
+		[Role]
+	FROM 
 		[dbo].[User]
-    WHERE 
+	WHERE
 		[Username] = @Username;
 
-    IF @@ROWCOUNT = 0 
-	RETURN 1;                    
-
-    RETURN 0;                                     
 END;
 GO
 
 EXEC [dbo].[p_Admin_Register]
     @Username     = N'admin',
-    @PasswordHash = N'Ydu+ZOnUa7L8+7ovo/d1PmRZmwnfX9nY4P75YEBkXqI=', 
-    @PasswordSalt = N'v1SZ6Ur4a9qX/cvC+Y4HSQ=='; 
+    @PasswordHash = N'OFTe5dHfyIpOKu2xP63MCQ==$SPzPDpssUhSisbnVwbapjmJvmG6cNlNhNhtZwvkTtAU='
 	
 	--Password: Admin123!
 	

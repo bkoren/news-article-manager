@@ -23,6 +23,15 @@ config.properties
 #db
 *.local.sql
 db/seed.sql
+<<<<<<< HEAD
+=======
+
+# Claude
+CLAUDE.md
+
+#Tests
+Test.java
+>>>>>>> dev
 
 # OS junk
 .DS_Store
