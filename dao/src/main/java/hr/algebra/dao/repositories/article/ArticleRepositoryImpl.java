@@ -99,6 +99,16 @@ public class ArticleRepositoryImpl extends Base<Article> implements ArticleRepos
     @Override
     public void update(Article article) throws SQLException {
         executeUpdate(
+                "{call p_Article_ClearAuthors(?)}",
+                statement -> statement.setInt(1, article.getArticleId())
+        );
+
+        executeUpdate(
+                "{call p_Article_ClearCategories(?)}",
+                statement -> statement.setInt(1, article.getArticleId())
+        );
+
+        executeUpdate(
             "{call p_Article_Update(?, ?, ?, ?, ?, ?, ?)}",
             statement -> {
                 statement.setInt(1, article.getArticleId());
@@ -110,6 +120,28 @@ public class ArticleRepositoryImpl extends Base<Article> implements ArticleRepos
                 statement.setString(7, article.getImagePath());
             }
         );
+
+        List<Author> authors = article.getAuthors();
+        for (Author author : authors) {
+            executeUpdate(
+                    "{call p_Article_AddAuthor(?, ?)}",
+                    statement -> {
+                        statement.setInt(1, article.getArticleId());
+                        statement.setInt(2, author.getAuthorId());
+                    }
+            );
+        }
+
+        List<Category> categories = article.getCategories();
+        for (Category category : categories) {
+            executeUpdate(
+                    "{call p_Article_AddCategory(?, ?)}",
+                    statement -> {
+                        statement.setInt(1, article.getArticleId());
+                        statement.setInt(2, category.getCategoryId());
+                    }
+            );
+        }
     }
 
     @Override

@@ -27,8 +27,7 @@ BEGIN
     SET NOCOUNT ON;
 
 	SELECT
-		[a].*,
-		[s].[Name] AS SourceName     
+		*
     FROM        
 		[dbo].[Article] AS a
     JOIN  
@@ -64,33 +63,115 @@ END;
 GO
 
 CREATE OR ALTER PROC [dbo].[p_Article_Delete]
-    @ArticleID INT,
-    @ImagePath NVARCHAR(300) OUTPUT       
+    @ArticleID INT     
 AS
 BEGIN
     SET NOCOUNT ON;    
   
-    SELECT 
-		@ImagePath = [ImagePath] 
-	FROM 
-		[dbo].[Article] 
-	WHERE 
-		[IDArticle] = @ArticleID;          
-   
-    BEGIN TRAN;
-
+	BEGIN TRAN
 	BEGIN TRY
 		DELETE FROM [dbo].[ArticleAuthor]   WHERE [ArticleID] = @ArticleID;  
 		DELETE FROM [dbo].[ArticleCategory] WHERE [ArticleID] = @ArticleID;  
-		DELETE FROM [dbo].[Article]         WHERE [IDArticle] = @ArticleID;      
-		
-		COMMIT TRAN;
+		DELETE FROM [dbo].[Article]         WHERE [IDArticle] = @ArticleID;      	
+	COMMIT TRAN;
 	END TRY
+
 	BEGIN CATCH
 		ROLLBACK TRAN;
 
 		THROW;
-	END CATCH;    
+	END CATCH
+	
+END;
+GO
+
+CREATE OR ALTER PROC [dbo].[p_Article_AddAuthor]
+	@ArticleID INT,
+	@AuthorID INT
+AS
+BEGIN
+	SET NOCOUNT ON;
+
+	INSERT INTO [dbo].[ArticleAuthor] 
+		(ArticleID, AuthorID)
+	VALUES
+		(@ArticleID, @AuthorID);
+
+END;
+GO
+
+CREATE OR ALTER PROC [dbo].[p_Article_GetAuthors]
+	@ArticleID INT
+AS
+BEGIN
+	SET NOCOUNT ON;
+
+	SELECT 
+		[a].[IDAuthor],
+		[a].[Name]
+	FROM 
+		[ArticleAuthor] AS aa
+	JOIN
+		[Author] AS a ON [aa].[AuthorID] = [a].[IDAuthor]
+	WHERE
+		[aa].[ArticleID] = @ArticleID
+
+END;
+GO
+
+CREATE OR ALTER PROC [dbo].[p_Article_ClearAuthors]
+	@ArticleID INT
+AS
+BEGIN
+	SET NOCOUNT ON;
+
+	DELETE FROM [ArticleAuthor] WHERE [ArticleID] = @ArticleID;
+
+END;
+GO
+
+CREATE OR ALTER PROC [dbo].[p_Article_AddCategory]
+	@ArticleID INT,
+	@CategoryID INT
+AS
+BEGIN
+	SET NOCOUNT ON;
+
+	INSERT INTO [dbo].[ArticleCategory] 
+		(ArticleID, CategoryID)
+	VALUES
+		(@ArticleID, @CategoryID);
+
+END;
+GO
+
+CREATE OR ALTER PROC [dbo].[p_Article_GetCategories]
+	@ArticleID INT
+AS
+BEGIN
+	SET NOCOUNT ON;
+
+	SELECT 
+		[c].[IDCategory],
+		[c].[Name]
+	FROM 
+		[ArticleCategory] AS ac
+	JOIN
+		[Category] AS c ON [ac].[CategoryID] = [c].[IDCategory]
+	WHERE
+		[ac].[ArticleID] = @ArticleID
+
+END;
+GO
+
+CREATE OR ALTER PROC [dbo].[p_Article_ClearCategories]
+	@ArticleID INT
+AS
+BEGIN
+	SET NOCOUNT ON;
+
+	DELETE FROM [ArticleCategory] WHERE [ArticleID] = @ArticleID;
+
 END;
 GO
 
@@ -138,19 +219,19 @@ CREATE OR ALTER PROC [dbo].[p_Author_Delete]
     @AuthorID INT
 AS
 BEGIN     
-	BEGIN TRAN;
-		
-	BEGIN TRY;		
-		DELETE FROM [dbo].[ArticleAuthor]	WHERE [AuthorID] = @AuthorID
+	SET NOCOUNT ON;
+	
+	BEGIN TRAN
+	BEGIN TRY
+		DELETE FROM [dbo].[ArticleAuthor]	WHERE [AuthorID] = @AuthorID;
 		DELETE FROM [dbo].[Author]			WHERE [IDAuthor] = @AuthorID;   
-
-		COMMIT TRAN;
+	COMMIT TRAN;
 	END TRY
 	BEGIN CATCH
 		ROLLBACK TRAN;
 
 		THROW;
-	END CATCH;  
+	END CATCH
 END;
 GO
 
@@ -205,9 +286,17 @@ AS
 BEGIN
 	SET NOCOUNT ON;
 
-	DELETE FROM [dbo].[ArticleCategory]	 WHERE [CategoryID] = @CategoryID;
-	DELETE FROM [dbo].[Category]		 WHERE [IDCategory] = @CategoryID;
+	BEGIN TRAN
+	BEGIN TRY
+		DELETE FROM [dbo].[ArticleCategory]	 WHERE [CategoryID] = @CategoryID;
+		DELETE FROM [dbo].[Category]		 WHERE [IDCategory] = @CategoryID;
+	COMMIT TRAN;
+	END TRY
+	BEGIN CATCH
+		ROLLBACK TRAN;
 
+		THROW;
+	END CATCH
 END;
 GO
 
