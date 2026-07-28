@@ -9,6 +9,6 @@ public interface SourceRepository {
     List<Source> read() throws SQLException;
 
     int create(Source source) throws SQLException;
-    int update(Source source) throws SQLException;
-    int delete(int sourceId) throws SQLException;
+    void update(Source source) throws SQLException;
+    void delete(int sourceId) throws SQLException;
 }

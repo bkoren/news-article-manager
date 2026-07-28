@@ -35,22 +35,22 @@ public class SourceRepositoryImpl extends Base<Source> implements SourceReposito
     }
 
     @Override
-    public int delete(int sourceId) throws SQLException {
-        return executeReturn(
-                "{? = call p_Source_Delete (?)}",
-                statement -> statement.setInt(2, sourceId)
+    public void delete(int sourceId) throws SQLException {
+        executeReturn(
+            "{? = call p_Source_Delete (?)}",
+            statement -> statement.setInt(2, sourceId)
         );
     }
 
     @Override
-    public int update(Source source) throws SQLException {
-        return executeUpdate(
-                "{call p_Source_Update (?, ?, ?)}",
-                statement -> {
-                    statement.setInt(1, source.getSourceId());
-                    statement.setString(2, source.getName());
-                    statement.setString(3, source.getFeedUrl());
-                }
+    public void update(Source source) throws SQLException {
+        executeUpdate(
+            "{call p_Source_Update (?, ?, ?)}",
+            statement -> {
+                statement.setInt(1, source.getSourceId());
+                statement.setString(2, source.getName());
+                statement.setString(3, source.getFeedUrl());
+            }
         );
     }
 }

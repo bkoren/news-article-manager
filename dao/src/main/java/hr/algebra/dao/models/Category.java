@@ -31,16 +31,19 @@ public class Category {
         if (!(o instanceof Category other)) {
             return false;
         }
-        return Objects.equals(name, other.name);
+        return Objects.equals(categoryId, other.categoryId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name);
+        return Objects.hash(categoryId);
     }
 
     @Override
     public String toString() {
-        return name;
+        return "Category{" +
+                "categoryId=" + categoryId +
+                ", name='" + name + '\'' +
+                '}';
     }
 }

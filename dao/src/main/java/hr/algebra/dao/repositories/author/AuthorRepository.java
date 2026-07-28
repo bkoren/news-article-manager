@@ -7,8 +7,9 @@ import java.util.List;
 
 public interface AuthorRepository {
     List<Author> read() throws SQLException;
+    List<Author> getAuthors(int articleId) throws SQLException;
 
     int create(Author author) throws SQLException;
-    int update(Author author) throws SQLException;
-    int delete(int authorId) throws SQLException;
+    void update(Author author) throws SQLException;
+    void delete(int authorId) throws SQLException;
 }

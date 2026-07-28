@@ -23,6 +23,14 @@ public class CategoryRepositoryImpl extends Base<Category> implements CategoryRe
     }
 
     @Override
+    public List<Category> getCategories(int articleId) throws SQLException {
+        return executeQuery(
+                "{call p_Article_GetCategories(?)}",
+                statement -> statement.setInt(1, articleId)
+        );
+    }
+
+    @Override
     public int create(Category category) throws SQLException {
         return executeInsert(
                 "{call p_Category_Create(?)}",
@@ -31,21 +39,21 @@ public class CategoryRepositoryImpl extends Base<Category> implements CategoryRe
     }
 
     @Override
-    public int update(Category category) throws SQLException {
-        return executeUpdate(
-                "{call p_Category_Update(?, ?)}",
-                statement -> {
-                    statement.setInt(1, category.getId());
-                    statement.setString(2, category.getName());
-                }
+    public void update(Category category) throws SQLException {
+        executeUpdate(
+            "{call p_Category_Update(?, ?)}",
+            statement -> {
+                statement.setInt(1, category.getId());
+                statement.setString(2, category.getName());
+            }
         );
     }
 
     @Override
-    public int delete(int categoryId) throws SQLException {
-        return executeUpdate(
-                "{call p_Category_Delete(?)}",
-                statement -> statement.setInt(1, categoryId)
+    public void delete(int categoryId) throws SQLException {
+        executeUpdate(
+            "{call p_Category_Delete(?)}",
+            statement -> statement.setInt(1, categoryId)
         );
     }
 }

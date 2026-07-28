@@ -23,6 +23,14 @@ public class AuthorRepositoryImpl extends Base<Author> implements AuthorReposito
     }
 
     @Override
+    public List<Author> getAuthors(int articleId) throws SQLException {
+        return executeQuery(
+                "{call p_Article_GetAuthors(?)}",
+                statement -> statement.setInt(1, articleId)
+        );
+    }
+
+    @Override
     public int create(Author author) throws SQLException {
          return executeInsert(
                  "{call p_Author_Create (?)}",
@@ -32,21 +40,21 @@ public class AuthorRepositoryImpl extends Base<Author> implements AuthorReposito
     }
 
     @Override
-    public int delete(int authorId) throws SQLException {
-        return executeUpdate(
-                "{call p_Author_Delete (?)}",
-                statement -> statement.setInt(1, authorId)
+    public void delete(int authorId) throws SQLException {
+        executeUpdate(
+            "{call p_Author_Delete (?)}",
+            statement -> statement.setInt(1, authorId)
         );
     }
 
     @Override
-    public int update(Author author) throws SQLException {
-        return executeUpdate(
-                "{call p_Author_Update (?, ?)}",
-                statement -> {
-                    statement.setInt(1, author.getAuthorId());
-                    statement.setString(2, author.getName());
-                }
+    public void update(Author author) throws SQLException {
+        executeUpdate(
+            "{call p_Author_Update (?, ?)}",
+            statement -> {
+                statement.setInt(1, author.getAuthorId());
+                statement.setString(2, author.getName());
+            }
         );
     }
 }

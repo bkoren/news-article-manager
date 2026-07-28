@@ -25,15 +25,13 @@ public class Author {
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof Author author))
-            return false;
-
-        return Objects.equals(name, author.name);
+        if (!(o instanceof Author author)) return false;
+        return authorId == author.authorId;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(name);
+        return Objects.hashCode(authorId);
     }
 
     @Override

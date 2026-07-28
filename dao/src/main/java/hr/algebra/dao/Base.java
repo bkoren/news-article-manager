@@ -23,13 +23,31 @@ public abstract class Base<T> {
         return result;
     }
 
-    protected int executeUpdate(String call, StatementBinder binder) throws SQLException {
+    protected List<T> executeQuery(String call, StatementBinder binder) throws SQLException {
+        List<T> result = new ArrayList<>();
+
         try (
             Connection connection = ConnectionProvider.getInstance().getConnection();
             CallableStatement statement = connection.prepareCall(call);
         ) {
             binder.bind(statement);
-            return statement.executeUpdate();
+            try(ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    result.add(map(rs));
+                }
+            }
+        }
+
+        return result;
+    }
+
+    protected void executeUpdate(String call, StatementBinder binder) throws SQLException {
+        try (
+            Connection connection = ConnectionProvider.getInstance().getConnection();
+            CallableStatement statement = connection.prepareCall(call);
+        ) {
+            binder.bind(statement);
+            statement.executeUpdate();
         }
     }
 

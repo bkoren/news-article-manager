@@ -1,5 +1,7 @@
 package hr.algebra.dao.models;
 
+import java.util.Objects;
+
 public class Source {
     private final int sourceId;
     private String name;
@@ -29,6 +31,17 @@ public class Source {
 
     public void setFeedUrl(String feedUrl) {
         this.feedUrl = feedUrl;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof Source source)) return false;
+        return Objects.equals(feedUrl, source.feedUrl);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(feedUrl);
     }
 
     @Override
