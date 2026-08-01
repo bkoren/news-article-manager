@@ -1,6 +1,6 @@
 package hr.algebra.dao.repositories.article;
 
-import hr.algebra.dao.Base;
+import hr.algebra.dao.repositories.Base;
 import hr.algebra.dao.models.Article;
 import hr.algebra.dao.models.Author;
 import hr.algebra.dao.models.Category;
