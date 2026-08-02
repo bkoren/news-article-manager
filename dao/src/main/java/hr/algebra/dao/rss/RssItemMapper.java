@@ -13,25 +13,29 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class RssItemMapper {
-    public ParsedItem map(RssItem item, RssSource rssSource) {
+    public ParsedItem map(RssItem item, String imagePath, RssSource rssSource) {
         Source source = toSource(rssSource);
 
         return new ParsedItem(
-                toArticle(item, source),
+                toArticle(item, imagePath, source),
                 source,
                 toAuthors(item),
                 toCategories(item)
         );
     }
 
-    private Article toArticle(RssItem item, Source source) {
+    public void setImgPath(String path) {
+
+    }
+
+    private Article toArticle(RssItem item, String imagePath, Source source) {
         return new Article(
             0,
             item.title(),
             item.description(),
             item.link(),
             toDate(item.pubDate()),
-            item.imageUrl(),
+            imagePath,
             source
         );
     }

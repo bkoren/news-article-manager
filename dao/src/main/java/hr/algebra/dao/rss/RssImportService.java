@@ -17,11 +17,16 @@ public class RssImportService {
     public List<ParsedItem> importFrom(RssSource source)
             throws ParserConfigurationException, IOException, SAXException {
 
+        AssetService asset = new AssetService();
         RssParser parser = new RssParser(source);
 
         List<ParsedItem> parsed = new ArrayList<>();
         for (RssItem item : parser.parseItems()) {
-            parsed.add(mapper.map(item, source));
+            parsed.add(mapper.map(
+                    item,
+                    asset.downloadImage(item.imageUrl()),
+                    source)
+            );
         }
 
         return parsed;
