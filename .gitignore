@@ -27,14 +27,11 @@ docs/wireframes.pdf
 # Database
 *.local.sql
 db/seed.sql
-<<<<<<< HEAD
-=======
 
 # Claude
 CLAUDE.md
 
 # Tests
 Test.java
->>>>>>> dev
 
 
