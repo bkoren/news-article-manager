@@ -1,4 +1,4 @@
-package hr.algebra.dao;
+package hr.algebra.dao.repositories;
 
 import hr.algebra.utilities.config.Config;
 

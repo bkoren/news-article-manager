@@ -12,6 +12,13 @@ AS
 BEGIN
     SET NOCOUNT ON;                      
 
+	IF EXISTS(SELECT 1 FROM [dbo].[Article] WHERE [Link] = @Link)
+	BEGIN
+		SELECT [IDArticle] FROM [dbo].[Article] WHERE [Link] = @Link;
+
+		RETURN;
+	END;
+
     INSERT INTO [dbo].[Article]
         ([SourceID], [Title], [Description], [Link], [PublishedAt], [ImagePath])
     VALUES
@@ -27,13 +34,16 @@ BEGIN
     SET NOCOUNT ON;
 
 	SELECT
-		[IDArticle],
-		[SourceID],
-		[Title],
-		[Description],
-		[Link],
-		[PublishedAt],
-		[ImagePath]
+		[a].[IDArticle],
+		[a].[SourceID],
+		[a].[Title],
+		[a].[Description],
+		[a].[Link],
+		[a].[PublishedAt],
+		[a].[ImagePath],
+		[s].[IDSource],
+		[s].[Name],
+		[s].[FeedUrl]
     FROM        
 		[dbo].[Article] AS a
     JOIN  
@@ -76,9 +86,12 @@ BEGIN
   
 	BEGIN TRAN
 	BEGIN TRY
+		SELECT [imagePath] FROM [dbo].[Article] WHERE [IDArticle] = @ArticleID;
+
 		DELETE FROM [dbo].[ArticleAuthor]   WHERE [ArticleID] = @ArticleID;  
 		DELETE FROM [dbo].[ArticleCategory] WHERE [ArticleID] = @ArticleID;  
-		DELETE FROM [dbo].[Article]         WHERE [IDArticle] = @ArticleID;      	
+		DELETE FROM [dbo].[Article]         WHERE [IDArticle] = @ArticleID;  
+	
 	COMMIT TRAN;
 	END TRY
 
@@ -97,6 +110,11 @@ CREATE OR ALTER PROC [dbo].[p_Article_AddAuthor]
 AS
 BEGIN
 	SET NOCOUNT ON;
+
+	IF EXISTS (
+		SELECT 1 FROM [dbo].[ArticleAuthor] 
+		WHERE [ArticleID] = @ArticleID AND [AuthorID] = @AuthorID
+	) RETURN;
 
 	INSERT INTO [dbo].[ArticleAuthor] 
 		(ArticleID, AuthorID)
@@ -143,6 +161,11 @@ AS
 BEGIN
 	SET NOCOUNT ON;
 
+	IF EXISTS (
+		SELECT 1 FROM [dbo].[ArticleCategory] 
+		WHERE [ArticleID] = @ArticleID AND [CategoryID] = @CategoryID
+	) RETURN;
+
 	INSERT INTO [dbo].[ArticleCategory] 
 		(ArticleID, CategoryID)
 	VALUES
@@ -187,10 +210,14 @@ AS
 BEGIN
     SET NOCOUNT ON
 
-    INSERT INTO [dbo].[Author] 
-		([Name]) 
-	VALUES 
-		(@Name);    
+	IF EXISTS(SELECT 1 FROM [dbo].[Author] WHERE [Name] = @Name)
+	BEGIN
+		SELECT [IDAuthor] FROM [dbo].[Author] WHERE [Name] = @Name
+
+		RETURN;
+	END;
+
+    INSERT INTO [dbo].[Author] ([Name]) VALUES (@Name);    
 
 	SELECT CAST(SCOPE_IDENTITY() AS INT);   
 END;
@@ -249,10 +276,14 @@ AS
 BEGIN
 	SET NOCOUNT ON;
 
-	INSERT INTO [dbo].[Category] 
-		([Name])
-	VALUES 
-		(@Name);
+	IF EXISTS(SELECT 1 FROM [dbo].[Category] WHERE [Name] = @Name)
+	BEGIN
+		SELECT [IDCategory] FROM [dbo].[Category] WHERE [Name] = @Name
+
+		RETURN;
+	END;
+
+	INSERT INTO [dbo].[Category] ([Name]) VALUES (@Name);
 
 	SELECT CAST(SCOPE_IDENTITY() AS INT);
 END;
@@ -317,10 +348,14 @@ AS
 BEGIN
 	SET NOCOUNT ON;
 
-	INSERT INTO [dbo].[Source] 
-		([Name], [FeedUrl])
-	VALUES
-		(@Name, @FeedUrl);
+	IF EXISTS(SELECT 1 FROM [dbo].[Source] WHERE FeedUrl = @FeedUrl)
+	BEGIN
+		SELECT [IDSource] FROM [dbo].[Source] WHERE [FeedUrl] = @FeedUrl
+
+		RETURN;
+	END;
+
+	INSERT INTO [dbo].[Source] ([Name], [FeedUrl]) VALUES (@Name, @FeedUrl);
 
 	SELECT CAST(SCOPE_IDENTITY() AS INT);
 END;

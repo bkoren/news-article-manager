@@ -1,4 +1,4 @@
-package hr.algebra.dao;
+package hr.algebra.dao.repositories;
 
 import java.sql.CallableStatement;
 import java.sql.SQLException;

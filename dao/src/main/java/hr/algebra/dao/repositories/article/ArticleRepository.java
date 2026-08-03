@@ -1,5 +1,6 @@
 package hr.algebra.dao.repositories.article;
 
+import hr.algebra.dao.exceptions.AssetException;
 import hr.algebra.dao.models.Article;
 
 import java.sql.SQLException;
@@ -10,5 +11,5 @@ public interface ArticleRepository {
 
     int create(Article article) throws SQLException;
     void update(Article article) throws SQLException;
-    void delete(int articleId) throws SQLException;
+    void delete(int articleId) throws SQLException, AssetException;
 }

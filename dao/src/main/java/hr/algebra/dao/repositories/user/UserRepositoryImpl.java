@@ -1,13 +1,12 @@
 package hr.algebra.dao.repositories.user;
 
-import hr.algebra.dao.Base;
+import hr.algebra.dao.repositories.Base;
 import hr.algebra.dao.models.Role;
 import hr.algebra.dao.models.User;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 public class UserRepositoryImpl extends Base<User> implements UserRepository {

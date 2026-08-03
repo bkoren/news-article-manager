@@ -1,6 +1,6 @@
 package hr.algebra.dao.repositories.category;
 
-import hr.algebra.dao.Base;
+import hr.algebra.dao.repositories.Base;
 import hr.algebra.dao.models.Category;
 
 import java.sql.ResultSet;

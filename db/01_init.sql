@@ -16,7 +16,7 @@ CREATE TABLE [dbo].[Author]
     [Name]  NVARCHAR(150)		  NOT NULL,   
 
     CONSTRAINT PK_Author PRIMARY KEY ([IDAuthor]),
-    CONSTRAINT UQ_Author_FullName UNIQUE ([Name])
+    CONSTRAINT UQ_Author_Name UNIQUE ([Name])
 );
 GO
 

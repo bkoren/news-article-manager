@@ -7,12 +7,13 @@ import java.util.Objects;
 
 public class Article implements Comparable<Article>{
     private final int articleId;
-    private int sourceId;
     private String title;
     private String description = null;
     private String link;
     private LocalDateTime publishedAt = null;
     private String imagePath = null;
+
+    private int sourceId;
 
     private Source source;
     private List<Author> authors = new ArrayList<>();
@@ -41,7 +42,7 @@ public class Article implements Comparable<Article>{
     }
 
     public int getSourceId() {
-        return (source != null) ? source.getSourceId() : sourceId;
+        return (source != null && source.getSourceId() != 0) ? source.getSourceId() : sourceId;
     }
 
     public void setSourceId(int sourceId) {

@@ -1,4 +1,4 @@
-package hr.algebra.dao;
+package hr.algebra.dao.repositories;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -9,11 +9,10 @@ public abstract class Base<T> {
 
     protected List<T> executeQuery(String call) throws SQLException {
         List<T> result = new ArrayList<>();
-
         try (
-            Connection connection = ConnectionProvider.getInstance().getConnection();
-            CallableStatement statement = connection.prepareCall(call);
-            ResultSet rs = statement.executeQuery();
+                Connection connection = ConnectionProvider.getInstance().getConnection();
+                CallableStatement statement = connection.prepareCall(call);
+                ResultSet rs = statement.executeQuery();
         ) {
             while (rs.next()) {
                 result.add(map(rs));
@@ -25,7 +24,6 @@ public abstract class Base<T> {
 
     protected List<T> executeQuery(String call, StatementBinder binder) throws SQLException {
         List<T> result = new ArrayList<>();
-
         try (
             Connection connection = ConnectionProvider.getInstance().getConnection();
             CallableStatement statement = connection.prepareCall(call);
@@ -77,6 +75,20 @@ public abstract class Base<T> {
             statement.execute();
 
             return statement.getInt(1);
+        }
+    }
+
+    protected String executeDelete(String call, StatementBinder binder) throws SQLException {
+        try (
+            Connection connection = ConnectionProvider.getInstance().getConnection();
+            CallableStatement statement = connection.prepareCall(call);
+        ) {
+            binder.bind(statement);
+            try(ResultSet rs = statement.executeQuery()){
+                if(rs.next()) return rs.getString("ImagePath");
+            }
+
+            return null;
         }
     }
 }
