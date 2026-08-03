@@ -20,16 +20,18 @@ assets/*
 config.properties
 .env
 
-#db
+# Documentation
+docs/architecture.svg
+docs/wireframes.pdf
+
+# Database
 *.local.sql
 db/seed.sql
 
 # Claude
 CLAUDE.md
 
-#Tests
+# Tests
 Test.java
 
-# OS junk
-.DS_Store
-Thumbs.db
+

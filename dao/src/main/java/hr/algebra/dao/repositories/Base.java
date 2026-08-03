@@ -77,4 +77,18 @@ public abstract class Base<T> {
             return statement.getInt(1);
         }
     }
+
+    protected String executeDelete(String call, StatementBinder binder) throws SQLException {
+        try (
+            Connection connection = ConnectionProvider.getInstance().getConnection();
+            CallableStatement statement = connection.prepareCall(call);
+        ) {
+            binder.bind(statement);
+            try(ResultSet rs = statement.executeQuery()){
+                if(rs.next()) return rs.getString("ImagePath");
+            }
+
+            return null;
+        }
+    }
 }

@@ -1,5 +1,6 @@
 package hr.algebra.dao.repositories.article;
 
+import hr.algebra.dao.exceptions.AssetException;
 import hr.algebra.dao.repositories.Base;
 import hr.algebra.dao.models.Article;
 import hr.algebra.dao.models.Author;
@@ -7,6 +8,7 @@ import hr.algebra.dao.models.Category;
 import hr.algebra.dao.models.Source;
 import hr.algebra.dao.repositories.author.AuthorRepository;
 import hr.algebra.dao.repositories.category.CategoryRepository;
+import hr.algebra.dao.rss.AssetService;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -72,7 +74,7 @@ public class ArticleRepositoryImpl extends Base<Article> implements ArticleRepos
                 }
         );
         List<Author> authors = article.getAuthors();
-        for(Author author: authors) {
+        for(Author author : authors) {
             executeUpdate(
                 "{call p_Article_AddAuthor(?, ?)}",
                 statement -> {
@@ -145,10 +147,15 @@ public class ArticleRepositoryImpl extends Base<Article> implements ArticleRepos
     }
 
     @Override
-    public void delete(int articleId) throws SQLException {
-        executeUpdate(
+    public void delete(int articleId) throws SQLException, AssetException {
+        String ImagePath = executeDelete(
             "{call p_Article_Delete(?)}",
             statement -> statement.setInt(1, articleId)
         );
+
+        AssetService asset = new AssetService();
+
+        asset.removeImage(ImagePath);
+
     }
 }

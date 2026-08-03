@@ -43,7 +43,7 @@ public class RssParser {
                             getTagValue(itemElement, "link"),
                             getTagValue(itemElement, "description"),
                             getTagValue(itemElement, "pubDate"),
-                            getTagValue(itemElement, "content:encoded"),
+                            imgPathExt(itemElement),
                             getTagValues(itemElement, "category"),
                             getTagValues(itemElement, "dc:creator")
                     )
@@ -75,21 +75,41 @@ public class RssParser {
 
     }
 
+    private String imgPathExt(Element itemElement) {
+        NodeList enclosure = itemElement.getElementsByTagName("enclosure");
+        if (enclosure.getLength() > 0) {
+            Element item = (Element) enclosure.item(0);
+            return item.getAttribute("url");
+        }
+
+        NodeList encoded = itemElement.getElementsByTagName("content:encoded");
+        if (encoded.getLength() > 0) {
+            String html = encoded.item(0).getTextContent();
+            return imgEncodedExt(html);
+        }
+
+        return null;
+    }
+
+    private static final Pattern pattern = Pattern.compile("<img[^>]+src=\"([^\"]+)\"");
+    private String imgEncodedExt(String value) {
+        Matcher matcher = pattern.matcher(RemoveIllegalChar(value));
+
+        return matcher.find() ? matcher.group(1) : null;
+    }
+
+    private CharSequence RemoveIllegalChar(String value) {
+        return value
+                .replace("&#038", "&")
+                .replace("&amp", "&");
+    }
+
     private String getTagValue(Element parent, String tagName) {
         NodeList nodes = parent.getElementsByTagName(tagName);
         if (nodes.getLength() == 0)
             return null;
 
-        String value = nodes.item(0).getTextContent().trim();
-
-        if(Objects.equals(tagName, "content:encoded")) {
-            Matcher matcher = Pattern.compile("src=\"([^\"]+)\"").matcher(value);
-
-            if(matcher.find())
-                return matcher.group(1);
-        }
-
-        return value;
+        return nodes.item(0).getTextContent().trim();
     }
 
     private List<String> getTagValues(Element parent, String tagName) {

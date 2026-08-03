@@ -24,11 +24,7 @@ public class RssItemMapper {
         );
     }
 
-    public void setImgPath(String path) {
-
-    }
-
-    private Article toArticle(RssItem item, String imagePath, Source source) {
+    Article toArticle(RssItem item, String imagePath, Source source) {
         return new Article(
             0,
             item.title(),
@@ -40,7 +36,7 @@ public class RssItemMapper {
         );
     }
 
-    private LocalDateTime toDate(String pubDate) {
+    LocalDateTime toDate(String pubDate) {
         try {
             DateTimeFormatter formatter = DateTimeFormatter.RFC_1123_DATE_TIME;
             ZonedDateTime zone = ZonedDateTime.parse(pubDate, formatter);
@@ -52,11 +48,11 @@ public class RssItemMapper {
         }
     }
 
-    private Source toSource(RssSource source) {
+    Source toSource(RssSource source) {
         return new Source(0, source.getName(), source.getFeedUrl());
     }
 
-    private List<Author> toAuthors(RssItem item) {
+    List<Author> toAuthors(RssItem item) {
         List<Author> authors = new ArrayList<>();
         for (String author : item.authors()) {
             authors.add(new Author(0, author));
@@ -65,7 +61,7 @@ public class RssItemMapper {
         return authors;
     }
 
-    private List<Category> toCategories(RssItem item) {
+    List<Category> toCategories(RssItem item) {
         List<Category> categories = new ArrayList<>();
         for (String category : item.categories()) {
             categories.add(new Category(0, category));
