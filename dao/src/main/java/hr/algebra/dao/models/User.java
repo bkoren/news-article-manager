@@ -4,11 +4,17 @@ import java.util.Objects;
 
 public class User {
     private final int userId;
-    private String username;
-    private String passwordHash;
+    private final String username;
+    private final String passwordHash;
     private Role role;
 
-    public User(int userId, String username, String passwordHash , Role role) {
+    public User(int userId, String username, String passwordHash) {
+        this.userId = userId;
+        this.username = username;
+        this.passwordHash = passwordHash;
+    }
+
+    public User(int userId, String username, String passwordHash, Role role) {
         this.userId = userId;
         this.username = username;
         this.passwordHash = passwordHash;
@@ -23,24 +29,12 @@ public class User {
         return username;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
     public String getPasswordHash() {
         return passwordHash;
     }
 
-    public void setPasswordHash(String passwordHash) {
-        this.passwordHash = passwordHash;
-    }
-
     public Role getRole() {
         return role;
-    }
-
-    public void setRole(Role role) {
-        this.role = role;
     }
 
     @Override

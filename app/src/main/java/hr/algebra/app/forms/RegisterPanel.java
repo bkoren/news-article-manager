@@ -7,13 +7,12 @@ public class RegisterPanel extends JPanel {
     private final JTextField     usernameField    = new JTextField();
     private final JPasswordField passwordField    = new JPasswordField();
     private final JPasswordField confirmField     = new JPasswordField();
-    private final JButton        registerButton   = new JButton("Register");
+    private final JButton        registerButton   = new JButton("Create account");
     private final JLabel         usernameLabel    = new JLabel("Username");
     private final JLabel         passwordLabel    = new JLabel("Password");
     private final JLabel         confirmLabel     = new JLabel("Confirm");
     private final JLabel         haveAccountLabel = new JLabel("Already have an account?");
     private final JButton        loginLink        = new JButton("Sign in here");
-
 
 
     public RegisterPanel() {
@@ -85,13 +84,13 @@ public class RegisterPanel extends JPanel {
         gc.gridy = 7;
         gc.insets = new Insets(4, 40, 0, 40);
         add(registerRow, gc);
-    }
+    };
 
     public JButton getRegisterButton() {
         return registerButton;
     }
 
-    public JButton getRegisterLink() {
+    public JButton getLoginLink() {
         return loginLink;
     }
 
@@ -101,5 +100,9 @@ public class RegisterPanel extends JPanel {
 
     public char[] getPassword() {
         return passwordField.getPassword();
+    }
+
+    public char[] getConfirm() {
+        return confirmField.getPassword();
     }
 }

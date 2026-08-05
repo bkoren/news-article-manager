@@ -7,9 +7,9 @@ import java.awt.Component;
 import java.io.File;
 import java.util.Optional;
 
-public final class Dialog {
+public final class DialogUtils {
 
-    private Dialog() { }
+    private DialogUtils() { }
 
     public static void showError(Component parent, String message) {
         JOptionPane.showMessageDialog(
