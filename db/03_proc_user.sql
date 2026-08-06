@@ -42,6 +42,10 @@ CREATE OR ALTER PROCEDURE [dbo].[p_Admin_Register]
 AS
 BEGIN    
     SET NOCOUNT ON;                                 
+	
+	IF EXISTS(SELECT 1 FROM [dbo].[User] WHERE [Username] = @Username)
+	PRINT('Admin already exists.');
+	RETURN;
    
     INSERT INTO [dbo].[User] 
 		([Username], [PasswordHash], [Role])
