@@ -1,22 +1,21 @@
 package hr.algebra.app.forms;
 
+import hr.algebra.app.background.ArticleImportWorker;
 import hr.algebra.dao.exceptions.AssetException;
 import hr.algebra.dao.models.Source;
 import hr.algebra.dao.rss.RssImportService;
 import hr.algebra.dao.rss.RssSource;
-import org.xml.sax.SAXException;
 
 import javax.swing.*;
-import javax.xml.parsers.ParserConfigurationException;
 import java.awt.*;
-import java.io.IOException;
-import java.sql.SQLException;
 import java.util.Objects;
 
 public class AdminPanel extends JPanel {
     JPanel stack = new JPanel();
 
     RssImportService importService;
+
+    ArticleImportWorker articleImportWorker;
 
     public AdminPanel() {
         try {
@@ -50,10 +49,19 @@ public class AdminPanel extends JPanel {
         ));
 
         JButton deleteBtn = new JButton("Delete all data");
-        deleteBtn.putClientProperty("FlatLaf.style", "background: #8c2828; foreground: #fff; margin: 6,14,6,14");
+        deleteBtn.putClientProperty("FlatLaf.style", "background: #8c2828; foreground: #fff; margin: 4,12,4,12");
         deleteBtn.setAlignmentX(LEFT_ALIGNMENT);
 
-        card.add(deleteBtn);
+        JPanel deleteAllSection = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        deleteAllSection.setAlignmentX(LEFT_ALIGNMENT);
+        deleteAllSection.setOpaque(false);
+        deleteAllSection.add(deleteBtn);
+        deleteAllSection.add(Box.createHorizontalStrut(50));
+
+        JLabel status = statusMsg("Loading...", null);
+        deleteAllSection.add(status);
+
+        card.add(deleteAllSection);
 
         return card;
     }
@@ -66,18 +74,27 @@ public class AdminPanel extends JPanel {
 
         JComboBox<Source> sourcesComboBox = new JComboBox<Source>();
         sourcesComboBox.setMaximumSize(new Dimension(250, sourcesComboBox.getPreferredSize().height));
-        Font f = sourcesComboBox.getFont();
-        sourcesComboBox.setFont(f.deriveFont(f.getSize() + 5f));
+        Font font = sourcesComboBox.getFont();
+        sourcesComboBox.setFont(font.deriveFont(font.getSize() + 5f));
 
         //Add sources here
 
-        card.add(labeledColumn("Source", sourcesComboBox));
+        card.add(labeledColumn(sourcesComboBox, "Source"));
 
         JButton deleteBtn = new JButton("Delete source");
-        deleteBtn.putClientProperty("FlatLaf.style", "background: #8c2828; foreground: #fff; margin: 6,14,6,14");
+        deleteBtn.putClientProperty("FlatLaf.style", "background: #8c2828; foreground: #fff; margin: 4,12,4,12");
         deleteBtn.setAlignmentX(LEFT_ALIGNMENT);
 
-        card.add(deleteBtn);
+        JPanel deleteSourceSection = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        deleteSourceSection.setAlignmentX(LEFT_ALIGNMENT);
+        deleteSourceSection.setOpaque(false);
+        deleteSourceSection.add(deleteBtn);
+        deleteSourceSection.add(Box.createHorizontalStrut(50));
+
+        JLabel status = statusMsg("Loading...", null);
+        deleteSourceSection.add(status);
+
+        card.add(deleteSourceSection);
 
         return card;
     }
@@ -89,10 +106,19 @@ public class AdminPanel extends JPanel {
         card.add(buildDescription("Refreshes the source list from configuration and re-checks each feed URL."));
 
         JButton reloadBtn = new JButton("Reload sources");
-        reloadBtn.putClientProperty("FlatLaf.style", "background: #2563eb; foreground: #fff; margin: 6,14,6,14");
+        reloadBtn.putClientProperty("FlatLaf.style", "background: #2563eb; foreground: #fff; margin: 4,12,4,12");
         reloadBtn.setAlignmentX(LEFT_ALIGNMENT);
 
-        card.add(reloadBtn);
+        JPanel reloadSection = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        reloadSection.setAlignmentX(LEFT_ALIGNMENT);
+        reloadSection.setOpaque(false);
+        reloadSection.add(reloadBtn);
+        reloadSection.add(Box.createHorizontalStrut(50));
+
+        JLabel status = statusMsg("Loading...", null);
+        reloadSection.add(status);
+
+        card.add(reloadSection);
 
         return card;
     }
@@ -101,7 +127,7 @@ public class AdminPanel extends JPanel {
         JPanel card = customPanel();
 
         JLabel title = buildTitle("Load new articles");
-        title.setBorder(BorderFactory.createEmptyBorder(0,0,8,0));
+        title.setBorder(BorderFactory.createEmptyBorder(0,0,12,0));
 
         JToggleButton allSourcesToggle = new JToggleButton("All sources");
         JToggleButton oneSourceToggle  = new JToggleButton("One source");
@@ -117,71 +143,76 @@ public class AdminPanel extends JPanel {
         buttonGroup.add(allSourcesToggle);
         buttonGroup.add(oneSourceToggle);
 
-        JPanel options = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
-        options.setAlignmentX(LEFT_ALIGNMENT);
-        options.setOpaque(false);
-        options.add(allSourcesToggle);
-        options.add(Box.createHorizontalStrut(8));
-        options.add(oneSourceToggle);
+        JPanel optionsSection = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        optionsSection.setAlignmentX(LEFT_ALIGNMENT);
+        optionsSection.setOpaque(false);
+        optionsSection.add(allSourcesToggle);
+        optionsSection.add(Box.createHorizontalStrut(8));
+        optionsSection.add(oneSourceToggle);
 
-        JComboBox<RssSource> loadArticlesComboBox = new JComboBox<RssSource>();
-        Font font = loadArticlesComboBox.getFont();
+        JComboBox<RssSource> sourcesForLoadArticles = new JComboBox<RssSource>();
+        Font fontSources = sourcesForLoadArticles.getFont();
 
-        loadArticlesComboBox.setPreferredSize(new Dimension(180, loadArticlesComboBox.getPreferredSize().height));
-        loadArticlesComboBox.setFont(font.deriveFont(font.getSize() + 5f));
+        sourcesForLoadArticles.setPreferredSize(new Dimension(250, sourcesForLoadArticles.getPreferredSize().height));
+        sourcesForLoadArticles.setFont(fontSources.deriveFont(fontSources.getSize() + 3f));
 
         for(RssSource source : importService.getAllSources()) {
-            loadArticlesComboBox.addItem(source);
+            sourcesForLoadArticles.addItem(source);
         }
 
-        JPanel comboBoxes = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
-        comboBoxes.setAlignmentX(LEFT_ALIGNMENT);
-        comboBoxes.setOpaque(false);
-        comboBoxes.add(labeledColumn("Source", loadArticlesComboBox));
-        comboBoxes.add(Box.createHorizontalStrut(12));
+        JPanel comboBoxSection = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        comboBoxSection.setAlignmentX(LEFT_ALIGNMENT);
+        comboBoxSection.setOpaque(false);
+        comboBoxSection.add(labeledColumn(sourcesForLoadArticles, "Source"));
+        comboBoxSection.add(Box.createVerticalStrut(60));
 
         JButton loadBtn  = new JButton("Load articles");
         loadBtn.putClientProperty("FlatLaf.style", "background: #2563eb; foreground: #fff; margin: 6,14,6,14");
         loadBtn.setAlignmentX(LEFT_ALIGNMENT);
 
+        JPanel loadBtnSection = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        loadBtnSection.setAlignmentX(LEFT_ALIGNMENT);
+        loadBtnSection.setOpaque(false);
+        loadBtnSection.add(Box.createVerticalStrut(8));
+        loadBtnSection.add(loadBtn);
+        loadBtnSection.add(Box.createHorizontalStrut(50));
+
+        JLabel status = new JLabel();
+        loadBtnSection.add(status);
+
         oneSourceToggle.addActionListener(e -> {
-            loadArticlesComboBox.setEnabled(true);
+            sourcesForLoadArticles.setEnabled(true);
         });
 
         allSourcesToggle.addActionListener(e -> {
-            loadArticlesComboBox.setEnabled(false);
+            sourcesForLoadArticles.setEnabled(false);
         });
         allSourcesToggle.doClick();
 
         loadBtn.addActionListener(e -> {
+            articleImportWorker = new ArticleImportWorker(importService, status);
+
             ButtonModel selected = buttonGroup.getSelection();
             try {
                 if (Objects.equals(selected.getActionCommand(), "all")) {
-                    importService.importFromAll();
+                    articleImportWorker.execute();
                 }
                 else if (Objects.equals(selected.getActionCommand(), "one")) {
-                    importService.importFrom(
-                            (RssSource) loadArticlesComboBox.getSelectedItem()
-                    );
+                    articleImportWorker.setSource((RssSource) sourcesForLoadArticles.getSelectedItem());
+                    articleImportWorker.execute();
                 }
-            }
-            catch (AssetException ex) {
-                throw new RuntimeException(ex);
-            }
-            catch (SQLException ex) {
-                throw new RuntimeException(ex);
-            }
-            catch (Exception ex) {
+            } catch (Exception ex) {
                 throw new RuntimeException(ex);
             }
         });
 
         card.add(title);
-        card.add(options);
+        card.add(optionsSection);
         card.add(Box.createVerticalStrut(12));
         card.add(Box.createHorizontalStrut(5));
-        card.add(comboBoxes);
-        card.add(loadBtn);
+        card.add(comboBoxSection);
+        card.add(loadBtnSection);
+        card.add(Box.createVerticalStrut(12));
 
         return card;
     }
@@ -191,10 +222,11 @@ public class AdminPanel extends JPanel {
         result.setLayout(new BoxLayout(result, BoxLayout.Y_AXIS));
         result.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createEtchedBorder(),
-                BorderFactory.createEmptyBorder(10, 12, 10, 12)
+                BorderFactory.createEmptyBorder(6, 10, 6, 10)
         ));
 
         result.setAlignmentX(LEFT_ALIGNMENT);
+        result.add(Box.createVerticalStrut(10));
 
         return result;
     }
@@ -219,20 +251,33 @@ public class AdminPanel extends JPanel {
         return result;
     }
 
-    private JPanel labeledColumn(String label, JComponent field) {
+    private JPanel labeledColumn(JComponent field, String labelMsg) {
+        field.setAlignmentX(Component.LEFT_ALIGNMENT);
+
         JPanel column = new JPanel();
         column.setLayout(new BoxLayout(column, BoxLayout.Y_AXIS));
         column.setOpaque(false);
 
-        JLabel l = new JLabel(label);
-        l.setAlignmentX(Component.LEFT_ALIGNMENT);
-        field.setAlignmentX(Component.LEFT_ALIGNMENT);
+        JLabel label = new JLabel(labelMsg);
+        label.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        column.add(l);
-        column.add(Box.createVerticalStrut(8));
+        column.add(label);
+        column.add(Box.createVerticalStrut(6));
         column.add(field);
-        column.add(Box.createVerticalStrut(8));
+        column.add(Box.createVerticalStrut(6));
 
         return column;
+    }
+
+    private JLabel statusMsg(String msg, Color color) {
+        JLabel result = new JLabel(msg);
+        Font fontStatusBold = result.getFont().deriveFont(Font.BOLD);
+        Font fontStatusSize  = fontStatusBold.deriveFont(15f);
+
+        result.setAlignmentX(RIGHT_ALIGNMENT);
+        result.setFont(fontStatusSize);
+        result.setForeground(color);
+
+        return result;
     }
 }

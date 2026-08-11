@@ -6,6 +6,7 @@ import hr.algebra.dao.models.User;
 import hr.algebra.dao.repositories.user.UserRepositoryImpl;
 import hr.algebra.utilities.gui.DialogUtils;
 import hr.algebra.utilities.gui.Icons;
+import hr.algebra.utilities.gui.Messages;
 import hr.algebra.utilities.security.Password;
 
 import javax.swing.*;
@@ -13,14 +14,16 @@ import java.sql.SQLException;
 import java.util.Arrays;
 
 public class AuthWindow extends JFrame {
-    JTabbedPane tabs            = new JTabbedPane();
-
     LoginPanel loginPanel       = new LoginPanel();
     RegisterPanel registerPanel = new RegisterPanel();
 
-    UserRepositoryImpl userRepository = new UserRepositoryImpl();
+    JTabbedPane tabs = new JTabbedPane();
 
-    public AuthWindow() throws SQLException {
+    UserRepositoryImpl userRepository;
+
+    public AuthWindow() {
+        userRepository = new UserRepositoryImpl();
+
         buildUi();
     }
 
@@ -47,59 +50,14 @@ public class AuthWindow extends JFrame {
         );
 
         loginPanel.getSignInButton().addActionListener(e -> {
-            String username = loginPanel.getUsername();
-            try {
-                if(userRepository.exists(username)) {
-                    User user = userRepository.getByUsername(username);
-
-                    char[] password = loginPanel.getPassword();
-                    if(Password.verify(new String(password), user.getPasswordHash())) {
-                        OpenMainWindow(user);
-
-                        this.dispose();
-                    }
-                    else {
-                        DialogUtils.showError(this, "Wrong password!");
-                    }
-                }
-                else {
-                    DialogUtils.showError(this, "User doesn't exist.");
-                }
-            } catch (SQLException exception) {
-                DialogUtils.showError(this, "Could not reach the database.");
+            if(!loginPanel.getUsername().isEmpty() && loginPanel.getPassword().length > 0) {
+                loginLogic();
             }
         });
 
         registerPanel.getRegisterButton().addActionListener(e -> {
-            String username =  registerPanel.getUsername();
-            try {
-                if(!userRepository.exists(username)) {
-                    char[] password = registerPanel.getPassword();
-                    char[] confirm  = registerPanel.getConfirm();
-
-                    if(password.length > 6) {
-                        if (Arrays.equals(password, confirm)) {
-                            String passwordHash = Password.hash(new String(password));
-
-                            userRepository.register(new User(0, username, passwordHash));
-
-                            DialogUtils.showInfo(this, "Registration successful.");
-
-                            tabs.setSelectedIndex(0);
-                        } else {
-                            DialogUtils.showError(this, "Passwords doesn't match.");
-                        }
-                    }
-                    else {
-                        DialogUtils.showError(this, "Password must contain at least 6 digits.");
-                    }
-                }
-                else {
-                    DialogUtils.showError(this, "Username already in use.");
-                }
-            }
-            catch (SQLException exception) {
-                DialogUtils.showError(this, "Could not reach the database.");
+            if(!registerPanel.getUsername().isEmpty() && registerPanel.getPassword().length > 0) {
+                registerLogic();
             }
         });
 
@@ -108,10 +66,69 @@ public class AuthWindow extends JFrame {
         tabs.addChangeListener(e -> {
             if (tabs.getSelectedIndex() == 0) {
                 getRootPane().setDefaultButton(loginPanel.getSignInButton());
-            } else {
+            }
+            else {
                 getRootPane().setDefaultButton(registerPanel.getRegisterButton());
             }
         });
+
+        this.setVisible(true);
+    }
+
+    private void registerLogic() {
+        String username =  registerPanel.getUsername();
+        try {
+            if(userRepository.exists(username)) {
+                DialogUtils.showError(this, Messages.USERNAME_TAKEN);
+                return;
+            }
+
+            char[] password = registerPanel.getPassword();
+            char[] confirm  = registerPanel.getConfirm();
+
+            if(password.length < 6) {
+                DialogUtils.showError(this, Messages.PASSWORDS_INVALID);
+                return;
+            }
+
+            if (!Arrays.equals(password, confirm)) {
+                DialogUtils.showError(this, Messages.PASSWORDS_DIFFER);
+                return;
+            }
+
+            userRepository.register(new User(0, username, Password.hash(new String(password))));
+
+            DialogUtils.showInfo(this, Messages.REGISTRATION_SUCCESS);
+
+            tabs.setSelectedIndex(0);
+        }
+        catch (SQLException exception) {
+            DialogUtils.showError(this, Messages.DB_ERROR);
+        }
+    }
+
+    private void loginLogic() {
+        String username = loginPanel.getUsername();
+        try {
+            if(!userRepository.exists(username)) {
+                DialogUtils.showError(this, Messages.LOGIN_FAILED);
+                return;
+            }
+
+            User user = userRepository.getByUsername(username);
+            char[] password = loginPanel.getPassword();
+
+            if(!Password.verify(new String(password), user.getPasswordHash())) {
+                DialogUtils.showError(this, Messages.PASSWORDS_WRONG);
+                return;
+            }
+
+            OpenMainWindow(user);
+            this.dispose();
+
+        } catch (SQLException exception) {
+            DialogUtils.showError(this, Messages.DB_ERROR);
+        }
     }
 
     private void OpenMainWindow(User user) {

@@ -18,7 +18,6 @@ public class LoginPanel extends JPanel {
         setLayout(new GridBagLayout());
         GridBagConstraints gc = new GridBagConstraints();
 
-
         gc.gridx = 0;
         gc.weightx = 1.0;
         gc.gridy = 0;
