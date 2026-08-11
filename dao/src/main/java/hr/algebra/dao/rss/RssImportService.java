@@ -18,22 +18,29 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 public class RssImportService {
     private final RssItemMapper mapper;
     private final AssetService asset;
 
+    private final RssSource[] allSources;
+
     public RssImportService() throws AssetException {
         mapper = new RssItemMapper();
         asset  = new AssetService();
+
+        allSources = RssSource.values();
     }
 
-    public void importFrom(RssSource source)
-            throws ParserConfigurationException, IOException, SAXException, AssetException, SQLException {
+    public void importFromAll() throws AssetException, SQLException, ParserConfigurationException, IOException, SAXException {
+        for(RssSource source : allSources) {
+            importFrom(source);
+        }
+    }
 
+    public void importFrom(RssSource source) throws ParserConfigurationException, IOException, SAXException, AssetException, SQLException {
         RssParser parser = new RssParser(source);
-        SourceRepositoryImpl sourceRepository = new SourceRepositoryImpl();
+        SourceRepositoryImpl  sourceRepository  = new SourceRepositoryImpl();
 
         List<Source> sources = sourceRepository.read();
         boolean preventDownload = sources.contains(
@@ -44,7 +51,7 @@ public class RssImportService {
         for (RssItem item : parser.parseItems()) {
             parsed.add(mapper.map(
                     item,
-                    preventDownload ? null : asset.downloadImage(item.imageUrl()),
+                    preventDownload ? null : asset.downloadImage(item.imageUrl(), parser.giveBackImgExt()),
                     source)
             );
         }
@@ -81,7 +88,11 @@ public class RssImportService {
             }
             article.addCategories(linkedCategories);
 
-            int articleId = articleRepository.create(article);
+            int articleId = articleRepository.create(article); // Can be -1 !!!
         }
+    }
+
+    public RssSource[] getAllSources() {
+        return allSources;
     }
 }

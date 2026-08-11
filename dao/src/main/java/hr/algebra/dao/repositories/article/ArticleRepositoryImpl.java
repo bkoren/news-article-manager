@@ -62,6 +62,10 @@ public class ArticleRepositoryImpl extends Base<Article> implements ArticleRepos
 
     @Override
     public int create(Article article) throws SQLException {
+        if(article.getLink() == null) {
+            return -1;
+        }
+
         int id = executeInsert(
                 "{call p_Article_Create(?, ?, ?, ?, ?, ?)}",
                 statement -> {

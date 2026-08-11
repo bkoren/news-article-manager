@@ -5,8 +5,6 @@ import hr.algebra.dao.exceptions.AssetException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.ProtocolException;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -22,8 +20,8 @@ public class AssetService {
         }
         catch (IOException exception) {
             throw new AssetException(
-                    "Failed to create folder: " + FOLDER
-                    ,exception
+                "Failed to create folder: " + FOLDER
+                ,exception
             );
         }
     }
@@ -55,34 +53,26 @@ public class AssetService {
         }
     }
 
-    private String generateId(String imgUrl) throws AssetException {
-        String imgUrlWithNoParams =
-                imgUrl.substring(0, imgUrl.lastIndexOf('?') != -1 ?
-                        imgUrl.lastIndexOf('?') :
-                        imgUrl.length()
-                );
-
-        String ext =
-                imgUrlWithNoParams.substring(imgUrlWithNoParams.lastIndexOf('.') != -1 ?
-                        imgUrlWithNoParams.lastIndexOf('.') + 1:
-                        imgUrlWithNoParams.length()
-                );
-
-        if(!(ext.contains("jpg") || ext.contains("jpeg") || ext.contains("png")))
+    private String generateId(String imgUrl, String imgExt) {
+        if(imgUrl == null) {
             return null;
+        }
 
-        return UUID.randomUUID().toString().substring(0, 12) + "." + ext;
+        return UUID.randomUUID().toString().substring(0, 12) + "." + imgExt;
     }
 
-    String downloadImage(String imgUrl) throws AssetException, IOException {
-        if (imgUrl == null)
-            return null;
-
-        URI url = URI.create(imgUrl);
-
-        String id = generateId(imgUrl);
+    String downloadImage(String imgUrl, String imgExt) throws IOException {
+        String id = generateId(imgUrl, imgExt);
         if(id == null)
             return null;
+
+        URI url;
+        try {
+            url = URI.create(imgUrl);
+        }
+        catch (IllegalArgumentException exception) {
+            return null;
+        }
 
         HttpURLConnection connection = (HttpURLConnection)
                 url.toURL().openConnection();
@@ -97,11 +87,11 @@ public class AssetService {
             Files.copy(stream, target);
 
             return target.toString();
-
-        } catch (IOException exception) {
+        }
+        catch (IOException exception) {
             return null;
-
-        } finally {
+        }
+        finally {
             connection.disconnect();
         }
     }

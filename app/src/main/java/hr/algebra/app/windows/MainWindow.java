@@ -11,13 +11,10 @@ import javax.swing.*;
 import java.awt.*;
 
 public class MainWindow extends JFrame{
-    private final JMenuBar menuBar = new JMenuBar();
-
     private final CardLayout containersLayout = new CardLayout();
     private final JPanel     displayContent   = new JPanel(containersLayout);
 
     private final User user;
-
     public MainWindow(User user) {
         this.user = user;
 
@@ -45,18 +42,27 @@ public class MainWindow extends JFrame{
         setResizable(false);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        JButton articlesMenu     = new JButton("Articles");
-        JButton authorsMenu      = new JButton("Authors");
-        JButton categoriesMenu   = new JButton("Categories");
+        JButton articlesMenu = new JButton("Articles");
+        articlesMenu.setContentAreaFilled(false);
+        articlesMenu.setBorderPainted(false);
 
+        JButton authorsMenu = new JButton("Authors");
+        authorsMenu.setContentAreaFilled(false);
+        authorsMenu.setBorderPainted(false);
+
+        JButton categoriesMenu = new JButton("Categories");
+        categoriesMenu.setContentAreaFilled(false);
+        categoriesMenu.setBorderPainted(false);
+
+        JMenuBar menuBar = new JMenuBar();
         menuBar.add(articlesMenu);
         menuBar.add(authorsMenu);
         menuBar.add(categoriesMenu);
 
         if(user.getRole() == Role.ADMIN) {
-            setTitle("");
-
             JButton adminMenu = new JButton("Admin");
+            adminMenu.setContentAreaFilled(false);
+            adminMenu.setBorderPainted(false);
             adminMenu.addActionListener(e -> {
                 openAdminPanel();
             });

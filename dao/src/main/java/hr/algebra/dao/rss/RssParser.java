@@ -15,12 +15,13 @@ import java.net.HttpURLConnection;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class RssParser {
     private final RssSource source;
+
+    private String imgExtension;
 
     RssParser(RssSource source) {
         this.source = source;
@@ -33,20 +34,21 @@ public class RssParser {
         NodeList itemNodes = document.getElementsByTagName("item");
         for (int i = 0; i < itemNodes.getLength(); i++) {
             Node node = itemNodes.item(i);
+
             if (node.getNodeType() != Node.ELEMENT_NODE)
                 continue;
 
             Element itemElement = (Element) node;
             items.add(
-                    new RssItem(
-                            getTagValue(itemElement, "title"),
-                            getTagValue(itemElement, "link"),
-                            getTagValue(itemElement, "description"),
-                            getTagValue(itemElement, "pubDate"),
-                            imgPathExt(itemElement),
-                            getTagValues(itemElement, "category"),
-                            getTagValues(itemElement, "dc:creator")
-                    )
+                new RssItem(
+                        getTagValue(itemElement, "title"),
+                        getTagValue(itemElement, "link"),
+                        getTagValue(itemElement, "description"),
+                        getTagValue(itemElement, "pubDate"),
+                        extractImgPath(itemElement),
+                        getTagValues(itemElement, "category"),
+                        getTagValues(itemElement, "dc:creator")
+                )
             );
         }
 
@@ -75,35 +77,6 @@ public class RssParser {
 
     }
 
-    private String imgPathExt(Element itemElement) {
-        NodeList enclosure = itemElement.getElementsByTagName("enclosure");
-        if (enclosure.getLength() > 0) {
-            Element item = (Element) enclosure.item(0);
-            return item.getAttribute("url");
-        }
-
-        NodeList encoded = itemElement.getElementsByTagName("content:encoded");
-        if (encoded.getLength() > 0) {
-            String html = encoded.item(0).getTextContent();
-            return imgEncodedExt(html);
-        }
-
-        return null;
-    }
-
-    private static final Pattern pattern = Pattern.compile("<img[^>]+src=\"([^\"]+)\"");
-    private String imgEncodedExt(String value) {
-        Matcher matcher = pattern.matcher(RemoveIllegalChar(value));
-
-        return matcher.find() ? matcher.group(1) : null;
-    }
-
-    private CharSequence RemoveIllegalChar(String value) {
-        return value
-                .replace("&#038", "&")
-                .replace("&amp", "&");
-    }
-
     private String getTagValue(Element parent, String tagName) {
         NodeList nodes = parent.getElementsByTagName(tagName);
         if (nodes.getLength() == 0)
@@ -120,5 +93,86 @@ public class RssParser {
             values.add(nodes.item(i).getTextContent().trim());
 
         return values;
+    }
+
+    private String extractImgPath(Element itemElement) {
+        String imgPath;
+
+        NodeList enclosure = itemElement.getElementsByTagName("enclosure");
+        if (enclosure.getLength() > 0) {
+            imgPath = ((Element) enclosure.item(0)).getAttribute("url");
+
+            if(isValid(imgPath)) {
+                imgExtension = extractExtension(imgPath);
+
+                return removeParams(imgPath);
+            }
+        }
+
+        NodeList encoded = itemElement.getElementsByTagName("content:encoded");
+        if (encoded.getLength() > 0) {
+            String html = encoded.item(0).getTextContent();
+            imgPath = imgEncodedExt(html);
+
+            if(imgPath != null && isValid(imgPath)) {
+                imgExtension = extractExtension(imgPath);
+
+                return removeParams(imgPath);
+            }
+        }
+
+        NodeList itunes = itemElement.getElementsByTagName("itunes:image");
+        if(itunes.getLength() > 0) {
+            imgPath = ((Element) itunes.item(0)).getAttribute("href");
+
+            if(isValid(imgPath)) {
+                imgExtension = extractExtension(imgPath);
+
+                return removeParams(imgPath);
+            }
+        }
+
+        return null;
+    }
+
+    private String imgEncodedExt(String value) {
+        Matcher matcher = Pattern.compile("<img[^>]+src=\"([^\"]+)\"")
+                .matcher(RemoveIllegalChar(value));
+
+        return matcher.find() ?
+                matcher.group(1) :
+                null;
+    }
+
+    private String extractExtension(String imgUrl) {
+        String imgUrlWithNoParams = removeParams(imgUrl);
+
+        return imgUrlWithNoParams.substring(imgUrlWithNoParams.lastIndexOf('.') != -1 ?
+                imgUrlWithNoParams.lastIndexOf('.') + 1:
+                imgUrlWithNoParams.length()
+        );
+    }
+
+    private String removeParams(String imgUrl) {
+        return imgUrl.substring(0, imgUrl.lastIndexOf('?') != -1 ?
+                imgUrl.lastIndexOf('?') :
+                imgUrl.length()
+        );
+    }
+
+    private CharSequence RemoveIllegalChar(String value) {
+        return value
+                .replace("&#038", "&")
+                .replace("&amp", "&");
+    }
+
+    private boolean isValid(String imgUrl) {
+        String extension = extractExtension(imgUrl);
+
+        return extension.contains("jpg") || extension.contains("jpeg") || extension.contains("png");
+    }
+
+    public String giveBackImgExt() {
+        return imgExtension;
     }
 }

@@ -1,14 +1,31 @@
 package hr.algebra.app.forms;
 
+import hr.algebra.dao.exceptions.AssetException;
 import hr.algebra.dao.models.Source;
+import hr.algebra.dao.rss.RssImportService;
+import hr.algebra.dao.rss.RssSource;
+import org.xml.sax.SAXException;
 
 import javax.swing.*;
+import javax.xml.parsers.ParserConfigurationException;
 import java.awt.*;
+import java.io.IOException;
+import java.sql.SQLException;
+import java.util.Objects;
 
 public class AdminPanel extends JPanel {
     JPanel stack = new JPanel();
 
+    RssImportService importService;
+
     public AdminPanel() {
+        try {
+            importService = new RssImportService();
+        }
+        catch (AssetException exception) {
+            //Display error!
+        }
+
         buildUi();
     }
 
@@ -85,7 +102,6 @@ public class AdminPanel extends JPanel {
 
         JLabel title = buildTitle("Load new articles");
         title.setBorder(BorderFactory.createEmptyBorder(0,0,8,0));
-        card.add(title);
 
         JToggleButton allSourcesToggle = new JToggleButton("All sources");
         JToggleButton oneSourceToggle  = new JToggleButton("One source");
@@ -95,9 +111,11 @@ public class AdminPanel extends JPanel {
         oneSourceToggle.putClientProperty("FlatLaf.style",
                 "margin: 5,5,5,5; selectedBackground: #2563eb; selectedForeground: #fff");
 
-        ButtonGroup modeGroup = new ButtonGroup();
-        modeGroup.add(allSourcesToggle);
-        modeGroup.add(oneSourceToggle);
+        ButtonGroup buttonGroup = new ButtonGroup();
+        allSourcesToggle.setActionCommand("all");
+        oneSourceToggle.setActionCommand("one");
+        buttonGroup.add(allSourcesToggle);
+        buttonGroup.add(oneSourceToggle);
 
         JPanel options = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         options.setAlignmentX(LEFT_ALIGNMENT);
@@ -105,43 +123,65 @@ public class AdminPanel extends JPanel {
         options.add(allSourcesToggle);
         options.add(Box.createHorizontalStrut(8));
         options.add(oneSourceToggle);
-        card.add(options);
-        card.add(Box.createVerticalStrut(12));
 
-        JComboBox<Source> loadArticlesComboBox = new JComboBox<Source>();
+        JComboBox<RssSource> loadArticlesComboBox = new JComboBox<RssSource>();
+        Font font = loadArticlesComboBox.getFont();
 
         loadArticlesComboBox.setPreferredSize(new Dimension(180, loadArticlesComboBox.getPreferredSize().height));
-        Font f = loadArticlesComboBox.getFont();
-        loadArticlesComboBox.setFont(f.deriveFont(f.getSize() + 5f));
+        loadArticlesComboBox.setFont(font.deriveFont(font.getSize() + 5f));
 
-        //Add values here!!!
-
-        JSpinner maxArticles = new JSpinner(new SpinnerNumberModel(20, 1, 100, 1));
+        for(RssSource source : importService.getAllSources()) {
+            loadArticlesComboBox.addItem(source);
+        }
 
         JPanel comboBoxes = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         comboBoxes.setAlignmentX(LEFT_ALIGNMENT);
         comboBoxes.setOpaque(false);
         comboBoxes.add(labeledColumn("Source", loadArticlesComboBox));
         comboBoxes.add(Box.createHorizontalStrut(12));
-        comboBoxes.add(labeledColumn("Max articles", maxArticles));
-        card.add(Box.createHorizontalStrut(5));
-        card.add(comboBoxes);
 
         JButton loadBtn  = new JButton("Load articles");
         loadBtn.putClientProperty("FlatLaf.style", "background: #2563eb; foreground: #fff; margin: 6,14,6,14");
         loadBtn.setAlignmentX(LEFT_ALIGNMENT);
-        card.add(loadBtn);
 
         oneSourceToggle.addActionListener(e -> {
-            maxArticles.setEnabled(true);
             loadArticlesComboBox.setEnabled(true);
         });
 
         allSourcesToggle.addActionListener(e -> {
-            maxArticles.setEnabled(false);
             loadArticlesComboBox.setEnabled(false);
         });
         allSourcesToggle.doClick();
+
+        loadBtn.addActionListener(e -> {
+            ButtonModel selected = buttonGroup.getSelection();
+            try {
+                if (Objects.equals(selected.getActionCommand(), "all")) {
+                    importService.importFromAll();
+                }
+                else if (Objects.equals(selected.getActionCommand(), "one")) {
+                    importService.importFrom(
+                            (RssSource) loadArticlesComboBox.getSelectedItem()
+                    );
+                }
+            }
+            catch (AssetException ex) {
+                throw new RuntimeException(ex);
+            }
+            catch (SQLException ex) {
+                throw new RuntimeException(ex);
+            }
+            catch (Exception ex) {
+                throw new RuntimeException(ex);
+            }
+        });
+
+        card.add(title);
+        card.add(options);
+        card.add(Box.createVerticalStrut(12));
+        card.add(Box.createHorizontalStrut(5));
+        card.add(comboBoxes);
+        card.add(loadBtn);
 
         return card;
     }
