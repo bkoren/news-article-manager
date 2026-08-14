@@ -16,10 +16,10 @@ BEGIN
         DELETE FROM [dbo].[Category];
         DELETE FROM [dbo].[Source];
 		
-        DBCC CHECKIDENT ('[dbo].[Article]',  RESEED, 0);
-        DBCC CHECKIDENT ('[dbo].[Author]',   RESEED, 0);
-        DBCC CHECKIDENT ('[dbo].[Category]', RESEED, 0);
-        DBCC CHECKIDENT ('[dbo].[Source]',   RESEED, 0);           
+        --DBCC CHECKIDENT ('[dbo].[Article]',  RESEED, 0);
+        --DBCC CHECKIDENT ('[dbo].[Author]',   RESEED, 0);
+        --DBCC CHECKIDENT ('[dbo].[Category]', RESEED, 0);
+        --DBCC CHECKIDENT ('[dbo].[Source]',   RESEED, 0);           
         
 		COMMIT TRAN;
     END TRY

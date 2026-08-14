@@ -20,11 +20,24 @@ public class SourceRepositoryImpl extends Base<Source> implements SourceReposito
 
     @Override
     public List<Source> read() throws SQLException {
-        return executeQuery("{call p_Source_Read}");
+        return executeRead("{call p_Source_Read}");
+    }
+
+    public int readIdByName(String name) throws SQLException {
+        List<Source> sources = executeRead(
+                "{call p_Source_ReadByName(?)}",
+                statement -> statement.setString(1, name)
+        );
+
+        return (!sources.isEmpty()) ? sources.getFirst().getSourceId() : -1;
     }
 
     @Override
     public int create(Source source) throws SQLException {
+        if(source.getName().isEmpty()) {
+            return -1;
+        }
+
         return executeInsert(
                 "{call p_Source_Create (?, ?)}",
                 statement -> {

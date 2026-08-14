@@ -1,7 +1,5 @@
 package hr.algebra.app;
 
-import com.sun.tools.javac.Main;
-import hr.algebra.app.windows.AuthWindow;
 import com.formdev.flatlaf.FlatDarkLaf;
 import hr.algebra.app.windows.MainWindow;
 import hr.algebra.dao.models.User;
@@ -15,6 +13,8 @@ public class Program {
         FlatDarkLaf.setup();
         UIManager.put("Component.arc", 8);
         UIManager.put("Button.arc", 999);
+
+        //SwingUtilities.invokeLater(AuthWindow::new);
 
         UserRepositoryImpl repo = new UserRepositoryImpl();
         User user = repo.getByUsername("admin");

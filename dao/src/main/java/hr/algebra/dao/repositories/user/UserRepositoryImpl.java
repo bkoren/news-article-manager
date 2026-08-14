@@ -41,7 +41,7 @@ public class UserRepositoryImpl extends Base<User> implements UserRepository {
 
     @Override
     public User getByUsername(String username) throws SQLException {
-        List<User> user = executeQuery(
+        List<User> user = executeRead(
             "{call p_User_GetByUsername(?)}",
             statement -> statement.setString(1, username)
         );

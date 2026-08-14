@@ -41,4 +41,9 @@ public enum RssSource {
 
     public String getName() { return name; }
     public String getFeedUrl() { return feedUrl; }
+
+    @Override
+    public String toString() {
+        return name.replace("_", " ");
+    }
 }

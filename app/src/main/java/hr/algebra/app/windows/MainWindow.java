@@ -38,7 +38,7 @@ public class MainWindow extends JFrame{
 
     private void buildUi() {
         setTitle("News App");
-        setSize(700, 610);
+        setSize(700, 620);
         setResizable(false);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 

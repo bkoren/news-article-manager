@@ -12,9 +12,6 @@ AS
 BEGIN
     SET NOCOUNT ON;                      
 
-	IF @Link IS NULL
-		RETURN;
-
 	IF EXISTS(SELECT 1 FROM [dbo].[Article] WHERE [Link] = @Link)
 	BEGIN
 		SELECT [IDArticle] FROM [dbo].[Article] WHERE [Link] = @Link;

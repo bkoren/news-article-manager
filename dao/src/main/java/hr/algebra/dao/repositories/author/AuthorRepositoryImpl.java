@@ -19,12 +19,12 @@ public class AuthorRepositoryImpl extends Base<Author> implements AuthorReposito
 
     @Override
     public List<Author> read() throws SQLException {
-        return executeQuery("{call p_Author_Read}");
+        return executeRead("{call p_Author_Read}");
     }
 
     @Override
     public List<Author> getAuthors(int articleId) throws SQLException {
-        return executeQuery(
+        return executeRead(
                 "{call p_Article_GetAuthors(?)}",
                 statement -> statement.setInt(1, articleId)
         );
@@ -32,11 +32,14 @@ public class AuthorRepositoryImpl extends Base<Author> implements AuthorReposito
 
     @Override
     public int create(Author author) throws SQLException {
-         return executeInsert(
-                 "{call p_Author_Create (?)}",
-                 statement -> statement.setString(1, author.getName())
+        if(author.getName().isEmpty()) {
+            return -1;
+        }
 
-         );
+        return executeInsert(
+                 "{call p_Author_Create(?)}",
+                 statement -> statement.setString(1, author.getName())
+        );
     }
 
     @Override

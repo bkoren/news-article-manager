@@ -19,12 +19,12 @@ public class CategoryRepositoryImpl extends Base<Category> implements CategoryRe
 
     @Override
     public List<Category> read() throws SQLException {
-        return executeQuery("{call p_Category_Read}");
+        return executeRead("{call p_Category_Read}");
     }
 
     @Override
     public List<Category> getCategories(int articleId) throws SQLException {
-        return executeQuery(
+        return executeRead(
                 "{call p_Article_GetCategories(?)}",
                 statement -> statement.setInt(1, articleId)
         );
@@ -32,6 +32,10 @@ public class CategoryRepositoryImpl extends Base<Category> implements CategoryRe
 
     @Override
     public int create(Category category) throws SQLException {
+        if(category.getName().isEmpty()) {
+            return -1;
+        }
+
         return executeInsert(
                 "{call p_Category_Create(?)}",
                 statement -> statement.setString(1, category.getName())

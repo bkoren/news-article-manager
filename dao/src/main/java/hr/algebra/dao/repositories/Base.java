@@ -7,7 +7,7 @@ import java.util.List;
 public abstract class Base<T> {
     protected abstract T map(ResultSet rs) throws SQLException;
 
-    protected List<T> executeQuery(String call) throws SQLException {
+    protected List<T> executeRead(String call) throws SQLException {
         List<T> result = new ArrayList<>();
         try (
                 Connection connection = ConnectionProvider.getInstance().getConnection();
@@ -22,7 +22,7 @@ public abstract class Base<T> {
         return result;
     }
 
-    protected List<T> executeQuery(String call, StatementBinder binder) throws SQLException {
+    protected List<T> executeRead(String call, StatementBinder binder) throws SQLException {
         List<T> result = new ArrayList<>();
         try (
             Connection connection = ConnectionProvider.getInstance().getConnection();
@@ -89,6 +89,15 @@ public abstract class Base<T> {
             }
 
             return null;
+        }
+    }
+
+    protected void executeDeleteAll(String call) throws SQLException {
+        try (
+            Connection connection = ConnectionProvider.getInstance().getConnection();
+            CallableStatement statement = connection.prepareCall(call);
+        ) {
+            statement.executeUpdate();
         }
     }
 }

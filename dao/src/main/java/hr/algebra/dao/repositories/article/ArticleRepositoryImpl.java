@@ -51,7 +51,21 @@ public class ArticleRepositoryImpl extends Base<Article> implements ArticleRepos
 
     @Override
     public List<Article> read() throws SQLException {
-        List<Article> articles = executeQuery("{call p_Article_Read}");
+        List<Article> articles = executeRead("{call p_Article_Read}");
+        for(Article a : articles) {
+            a.setAuthors(authorRepo.getAuthors(a.getArticleId()));
+            a.setCategories(categoryRepo.getCategories(a.getArticleId()));
+        }
+
+        return articles;
+    }
+
+    public List<Article> readBySource(int sourceId) throws SQLException {
+        List<Article> articles = executeRead(
+                "{call p_Article_ReadBySource(?)}",
+                statement -> statement.setInt(1, sourceId)
+        );
+
         for(Article a : articles) {
             a.setAuthors(authorRepo.getAuthors(a.getArticleId()));
             a.setCategories(categoryRepo.getCategories(a.getArticleId()));
@@ -77,6 +91,10 @@ public class ArticleRepositoryImpl extends Base<Article> implements ArticleRepos
                     statement.setString(6, article.getImagePath());
                 }
         );
+        if(id == -1) {
+            return id;
+        }
+
         List<Author> authors = article.getAuthors();
         for(Author author : authors) {
             executeUpdate(
@@ -157,9 +175,12 @@ public class ArticleRepositoryImpl extends Base<Article> implements ArticleRepos
             statement -> statement.setInt(1, articleId)
         );
 
-        AssetService asset = new AssetService();
+        new AssetService().removeImage(ImagePath);
+    }
 
-        asset.removeImage(ImagePath);
+    public void deleteAll() throws SQLException, AssetException {
+        executeDeleteAll("{call p_DeleteAllData()}");
 
+        new AssetService().clearFolder();
     }
 }
