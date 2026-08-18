@@ -14,7 +14,7 @@ BEGIN
 
 	IF EXISTS(SELECT 1 FROM [dbo].[Article] WHERE [Link] = @Link)
 	BEGIN
-		SELECT [IDArticle] FROM [dbo].[Article] WHERE [Link] = @Link;
+		SELECT 0;
 
 		RETURN;
 	END;
@@ -29,6 +29,7 @@ END;
 GO
 
 CREATE OR ALTER PROC [dbo].[p_Article_Read]
+	@SourceName NVARCHAR(100) = NULL 
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -48,6 +49,8 @@ BEGIN
 		[dbo].[Article] AS a
     JOIN  
 		[dbo].[Source] AS s ON [s].[IDSource] = [a].[SourceID]
+	WHERE
+		@SourceName IS NULL OR [s].[Name] = @SourceName
     ORDER BY    
 		[a].[PublishedAt] DESC;           
 END;
@@ -57,10 +60,10 @@ CREATE OR ALTER PROC [dbo].[p_Article_Update]
     @ArticleID   INT,
     @SourceID	 INT,
     @Title       NVARCHAR(300),
-    @Description NVARCHAR(MAX),
+    @Description NVARCHAR(MAX) = NULL,
     @Link        NVARCHAR(500),
-    @PublishedAt DATETIME2,
-    @ImagePath   NVARCHAR(300)
+    @PublishedAt DATETIME2	   = NULL,
+    @ImagePath   NVARCHAR(300) = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -111,15 +114,31 @@ AS
 BEGIN
 	SET NOCOUNT ON;
 
-	IF EXISTS (
-		SELECT 1 FROM [dbo].[ArticleAuthor] 
-		WHERE [ArticleID] = @ArticleID AND [AuthorID] = @AuthorID
-	) RETURN;
+	IF EXISTS (SELECT 1 FROM [dbo].[ArticleAuthor] WHERE [ArticleID] = @ArticleID AND [AuthorID] = @AuthorID) 
+	RETURN;
 
 	INSERT INTO [dbo].[ArticleAuthor] 
 		(ArticleID, AuthorID)
 	VALUES
 		(@ArticleID, @AuthorID);
+
+END;
+GO
+
+CREATE OR ALTER PROC [dbo].[p_Article_AddCategory]
+	@ArticleID  INT,
+	@CategoryID INT
+AS
+BEGIN
+	SET NOCOUNT ON;
+
+	IF EXISTS (SELECT 1 FROM [dbo].[ArticleCategory] WHERE [ArticleID] = @ArticleID AND [CategoryID] = @CategoryID)
+	RETURN;
+
+	INSERT INTO [dbo].[ArticleCategory] 
+		(ArticleID, CategoryID)
+	VALUES
+		(@ArticleID, @CategoryID);
 
 END;
 GO
@@ -143,37 +162,6 @@ BEGIN
 END;
 GO
 
-CREATE OR ALTER PROC [dbo].[p_Article_ClearAuthors]
-	@ArticleID INT
-AS
-BEGIN
-	SET NOCOUNT ON;
-
-	DELETE FROM [ArticleAuthor] WHERE [ArticleID] = @ArticleID;
-
-END;
-GO
-
-CREATE OR ALTER PROC [dbo].[p_Article_AddCategory]
-	@ArticleID  INT,
-	@CategoryID INT
-AS
-BEGIN
-	SET NOCOUNT ON;
-
-	IF EXISTS (
-		SELECT 1 FROM [dbo].[ArticleCategory] 
-		WHERE [ArticleID] = @ArticleID AND [CategoryID] = @CategoryID
-	) RETURN;
-
-	INSERT INTO [dbo].[ArticleCategory] 
-		(ArticleID, CategoryID)
-	VALUES
-		(@ArticleID, @CategoryID);
-
-END;
-GO
-
 CREATE OR ALTER PROC [dbo].[p_Article_GetCategories]
 	@ArticleID INT
 AS
@@ -189,17 +177,6 @@ BEGIN
 		[Category] AS c ON [ac].[CategoryID] = [c].[IDCategory]
 	WHERE
 		[ac].[ArticleID] = @ArticleID
-
-END;
-GO
-
-CREATE OR ALTER PROC [dbo].[p_Article_ClearCategories]
-	@ArticleID INT
-AS
-BEGIN
-	SET NOCOUNT ON;
-
-	DELETE FROM [ArticleCategory] WHERE [ArticleID] = @ArticleID;
 
 END;
 GO
@@ -348,9 +325,9 @@ AS
 BEGIN
 	SET NOCOUNT ON;
 
-	IF EXISTS(SELECT 1 FROM [dbo].[Source] WHERE FeedUrl = @FeedUrl)
+	IF EXISTS(SELECT 1 FROM [dbo].[Source] WHERE [FeedUrl] = @FeedUrl OR [Name] = @Name)
 	BEGIN
-		SELECT [IDSource] FROM [dbo].[Source] WHERE [FeedUrl] = @FeedUrl
+		SELECT [IDSource] FROM [dbo].[Source] WHERE [FeedUrl] = @FeedUrl OR [Name] = @Name 
 
 		RETURN;
 	END;
@@ -394,15 +371,61 @@ END;
 GO
 
 CREATE OR ALTER PROC [dbo].[p_Source_Delete]
-	@SourceID INT
+	@Name NVARCHAR(100)
 AS
 BEGIN
 	SET NOCOUNT ON;
 
-	IF EXISTS (SELECT 1 FROM [dbo].[Article] WHERE [SourceID] = @SourceID)
-	RETURN 2;
+	DECLARE @IDSource INT;
 
-	DELETE FROM [dbo].[Source] WHERE [IDSource] = @SourceID;
-	RETURN 0;	
+	SELECT
+		@IDSource = [IDSource] 
+	FROM
+		[dbo].[Source] 
+	WHERE 
+		[Name] = @Name
+
+	IF(@IDSource IS NULL)
+	BEGIN
+		SELECT -1;
+
+		RETURN
+	END;
+
+	BEGIN TRAN
+	BEGIN TRY
+
+		DELETE FROM [dbo].[ArticleAuthor] 
+		WHERE [ArticleID] IN (
+			SELECT 
+				[IDArticle] 
+			FROM 
+				[dbo].[Article]
+			WHERE 
+				[SourceID] = @IDSource
+		)
+
+		DELETE FROM [dbo].[ArticleCategory] 
+		WHERE [ArticleID] IN (
+			SELECT 
+				[IDArticle] 
+			FROM 
+				[dbo].[Article]
+			WHERE 
+				[SourceID] = @IDSource
+		)
+
+		DELETE FROM [dbo].[Article] WHERE [SourceID] = @IDSource;
+		DELETE FROM [dbo].[Source]  WHERE [IDSource] = @IDSource;
+
+		COMMIT;
+
+	END TRY
+	BEGIN CATCH
+		ROLLBACK;
+
+		THROW;
+	END CATCH
+	
 END;
 GO
