@@ -1,27 +1,28 @@
 package hr.algebra.app.background;
 
 import hr.algebra.app.forms.AdminPanel;
-import hr.algebra.dao.models.Article;
-import hr.algebra.dao.repositories.article.ArticleRepositoryImpl;
 import hr.algebra.dao.rss.RssImportService;
 import hr.algebra.dao.rss.RssSource;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.List;
+import java.util.Enumeration;
 
 public class AdminArticleLoadWorker extends SwingWorker<Integer, String> {
     RssImportService service;
     RssSource        source;
 
+    private final JComboBox<RssSource> sources;
+    private final ButtonGroup buttonGroup;
     private final JLabel  statusLabel;
     private final JButton loadBtn;
 
-    public AdminArticleLoadWorker(RssImportService service, JLabel statusLabel, JButton loadBtn) {
-        this.statusLabel = statusLabel;
-        this.service     = service;
-        this.loadBtn     = loadBtn;
-
+    public AdminArticleLoadWorker(RssImportService service, JComboBox<RssSource> sources, ButtonGroup buttonGroup, JLabel statusLabel, JButton loadBtn) {
+        this.statusLabel     = statusLabel;
+        this.service         = service;
+        this.loadBtn         = loadBtn;
+        this.sources         = sources;
+        this.buttonGroup = buttonGroup;
         this.source = null;
     }
 
@@ -48,7 +49,13 @@ public class AdminArticleLoadWorker extends SwingWorker<Integer, String> {
             AdminPanel.setStatusMsg(statusLabel, "Error occurred.", Color.RED);
         }
 
+        AdminPanel.setBusy(false);
         loadBtn.setEnabled(true);
+        sources.setEnabled(true);
+        Enumeration<AbstractButton> options = buttonGroup.getElements();
+        while (options.hasMoreElements()) {
+            options.nextElement().setEnabled(true);
+        }
     }
 
     public void setSource(RssSource source) {

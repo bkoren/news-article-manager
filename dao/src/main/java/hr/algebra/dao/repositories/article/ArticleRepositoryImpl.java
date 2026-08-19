@@ -1,7 +1,7 @@
 package hr.algebra.dao.repositories.article;
 
 import hr.algebra.dao.exceptions.AssetException;
-import hr.algebra.dao.repositories.Base;
+import hr.algebra.dao.repositories.BaseRepository;
 import hr.algebra.dao.models.Article;
 import hr.algebra.dao.models.Author;
 import hr.algebra.dao.models.Category;
@@ -16,7 +16,7 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
 
-public class ArticleRepositoryImpl extends Base<Article> implements ArticleRepository {
+public class ArticleRepositoryImpl extends BaseRepository<Article> implements ArticleRepository {
     private final AuthorRepository authorRepo;
     private final CategoryRepository categoryRepo;
 
@@ -26,43 +26,33 @@ public class ArticleRepositoryImpl extends Base<Article> implements ArticleRepos
     }
 
     @Override
-    protected Article map(ResultSet rs) throws SQLException {
+    protected Article map(ResultSet databaseResult) throws SQLException {
         Source source = new Source(
-                rs.getInt("IDSource"),
-                rs.getString("Name"),
-                rs.getString("FeedUrl")
+                databaseResult.getInt("IDSource"),
+                databaseResult.getString("Name"),
+                databaseResult.getString("FeedUrl")
         );
 
-        Timestamp publishedAt = rs.getTimestamp("PublishedAt");
+        Timestamp publishedAt = databaseResult.getTimestamp("PublishedAt");
         LocalDateTime castPublishedAt = publishedAt != null
                 ? publishedAt.toLocalDateTime()
                 : null;
 
         return new Article(
-                rs.getInt("IDArticle"),
-                rs.getString("Title"),
-                rs.getString("Description"),
-                rs.getString("Link"),
+                databaseResult.getInt("IDArticle"),
+                databaseResult.getString("Title"),
+                databaseResult.getString("Description"),
+                databaseResult.getString("Link"),
                 castPublishedAt,
-                rs.getString("ImagePath"),
+                databaseResult.getString("ImagePath"),
                 source
         );
     }
 
     @Override
-    public List<Article> read() throws SQLException {
-        List<Article> articles = executeRead("{call p_Article_Read}");
-        for(Article a : articles) {
-            a.setAuthors(authorRepo.getAuthors(a.getArticleId()));
-            a.setCategories(categoryRepo.getCategories(a.getArticleId()));
-        }
-
-        return articles;
-    }
-
-    public List<Article> readBySource(int sourceId) throws SQLException {
+    public List<Article> read(int sourceId) throws SQLException {
         List<Article> articles = executeRead(
-                "{call p_Article_ReadBySource(?)}",
+                "{call p_Article_Read(?)}",
                 statement -> statement.setInt(1, sourceId)
         );
 
@@ -170,17 +160,19 @@ public class ArticleRepositoryImpl extends Base<Article> implements ArticleRepos
 
     @Override
     public void delete(int articleId) throws SQLException, AssetException {
+        if(articleId == 0) {
+            executeDelete("{call p_DeleteAllData()}");
+
+            new AssetService().clearFolder();
+
+            return;
+        }
+
         String ImagePath = executeDelete(
             "{call p_Article_Delete(?)}",
             statement -> statement.setInt(1, articleId)
         );
 
         new AssetService().removeImage(ImagePath);
-    }
-
-    public void deleteAll() throws SQLException, AssetException {
-        executeDeleteAll("{call p_DeleteAllData()}");
-
-        new AssetService().clearFolder();
     }
 }

@@ -1,13 +1,13 @@
 package hr.algebra.dao.repositories.category;
 
-import hr.algebra.dao.repositories.Base;
+import hr.algebra.dao.repositories.BaseRepository;
 import hr.algebra.dao.models.Category;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
-public class CategoryRepositoryImpl extends Base<Category> implements CategoryRepository {
+public class CategoryRepositoryImpl extends BaseRepository<Category> implements CategoryRepository {
 
     @Override
     protected Category map(ResultSet rs) throws SQLException {

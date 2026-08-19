@@ -14,7 +14,7 @@ BEGIN
 
 	IF EXISTS(SELECT 1 FROM [dbo].[Article] WHERE [Link] = @Link)
 	BEGIN
-		SELECT 0;
+		SELECT -1 AS [Already exists];
 
 		RETURN;
 	END;
@@ -29,7 +29,7 @@ END;
 GO
 
 CREATE OR ALTER PROC [dbo].[p_Article_Read]
-	@SourceName NVARCHAR(100) = NULL 
+	@SourceID INT = 0
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -50,7 +50,7 @@ BEGIN
     JOIN  
 		[dbo].[Source] AS s ON [s].[IDSource] = [a].[SourceID]
 	WHERE
-		@SourceName IS NULL OR [s].[Name] = @SourceName
+		@SourceId = 0 OR [s].[IDSource] = @SourceID
     ORDER BY    
 		[a].[PublishedAt] DESC;           
 END;
@@ -387,9 +387,9 @@ BEGIN
 
 	IF(@IDSource IS NULL)
 	BEGIN
-		SELECT -1;
+		SELECT -1 AS [Not found!];
 
-		RETURN
+		RETURN;
 	END;
 
 	BEGIN TRAN
@@ -427,5 +427,6 @@ BEGIN
 		THROW;
 	END CATCH
 	
+	SELECT 0 AS [Success];
 END;
 GO

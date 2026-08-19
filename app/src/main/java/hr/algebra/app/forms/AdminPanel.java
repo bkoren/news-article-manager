@@ -4,15 +4,18 @@ import hr.algebra.app.background.AdminArticleLoadWorker;
 import hr.algebra.app.background.AdminDeleteWorker;
 import hr.algebra.dao.exceptions.AssetException;
 import hr.algebra.dao.models.Source;
+import hr.algebra.dao.repositories.article.ArticleRepositoryImpl;
+import hr.algebra.dao.repositories.author.AuthorRepositoryImpl;
+import hr.algebra.dao.repositories.category.CategoryRepositoryImpl;
 import hr.algebra.dao.repositories.source.SourceRepositoryImpl;
 import hr.algebra.dao.rss.RssImportService;
 import hr.algebra.dao.rss.RssSource;
 import hr.algebra.utilities.gui.DialogUtils;
-import hr.algebra.utilities.gui.Messages;
 
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.Objects;
 
@@ -21,13 +24,22 @@ public class AdminPanel extends JPanel {
 
     RssImportService importService;
 
+    private final SourceRepositoryImpl   sourceRepository;
+    private final ArticleRepositoryImpl  articleRepository;
+
     public AdminPanel() {
         try {
-            importService    = new RssImportService();
+            importService = new RssImportService();
         }
         catch (AssetException exception) {
             DialogUtils.showError(this, exception.getMessage());
         }
+
+        sourceRepository    = new SourceRepositoryImpl();
+        articleRepository   = new ArticleRepositoryImpl(
+                new AuthorRepositoryImpl(),
+                new CategoryRepositoryImpl()
+        );
 
         buildUi();
     }
@@ -47,20 +59,22 @@ public class AdminPanel extends JPanel {
         add(stack, BorderLayout.NORTH);
     }
 
+    private static boolean threadBusy = false;
 
     private List<DefaultComboBoxModel<RssSource>> listOfJComboBoxes;
     private List<JLabel> statusMsg;
 
+
     AdminDeleteWorker adminDeleteWorker;
+    private JButton deleteAllBtn;
+    private JLabel  statusLabelDeleteAll;
     private Component deleteAllCard() {
         JPanel card = buildCustomPanel();
 
         card.add(buildTitle("Delete all data"));
-        card.add(buildDescription(
-                "Removes all articles, authors, categories and their images."
-        ));
+        card.add(buildDescription("Removes all articles, authors, categories and their images."));
 
-        JButton deleteAllBtn = new JButton("Delete all data");
+        deleteAllBtn = new JButton("Delete all data");
         deleteAllBtn.putClientProperty("FlatLaf.style", "background: #8c2828; foreground: #fff; margin: 4,12,4,12");
         deleteAllBtn.setAlignmentX(LEFT_ALIGNMENT);
 
@@ -70,18 +84,26 @@ public class AdminPanel extends JPanel {
         deleteAllSection.add(deleteAllBtn);
         deleteAllSection.add(Box.createHorizontalStrut(50));
 
-        JLabel statusLabelDeleteAll = new JLabel();
+        statusLabelDeleteAll = new JLabel();
         deleteAllSection.add(statusLabelDeleteAll);
         statusMsg.add(statusLabelDeleteAll);
 
         deleteAllBtn.addActionListener(e -> {
-            if(!DialogUtils.confirm(this, Messages.CONFIRM_DELETE_ALL)) {
+            if(threadBusy) {
+                return;
+            }
+            else {
+                setBusy(true);
+            }
+
+            if(!DialogUtils.confirm(this, "This will delete all articles, authors, categories and their images. Continue? ")) {
                 return;
             }
 
             deleteAllBtn.setEnabled(false);
-            clearLabelsOfOtherCars(statusLabelDeleteAll);
-            deleteAllLogic(statusLabelDeleteAll, deleteAllBtn);
+            clearLabelsOfOtherCards(statusLabelDeleteAll);
+
+            deleteAllLogic();
         });
 
         card.add(deleteAllSection);
@@ -89,6 +111,9 @@ public class AdminPanel extends JPanel {
         return card;
     }
 
+    private JButton deleteBtn;
+    private JLabel statusDeleteBySource;
+    private JComboBox<RssSource> deleteSourcesList;
     private Component deleteSourceCard() {
         JPanel card = buildCustomPanel();
 
@@ -96,16 +121,16 @@ public class AdminPanel extends JPanel {
         card.add(buildDescription("Removes the selected source and all of its articles and images"));
 
         DefaultComboBoxModel<RssSource> sharedModel = new DefaultComboBoxModel<>(importService.getAllSources());
-        JComboBox<RssSource> sourcesList = new JComboBox<>(sharedModel);
+        deleteSourcesList = new JComboBox<>(sharedModel);
 
-        Font font = sourcesList.getFont();
-        sourcesList.setMaximumSize(new Dimension(250, sourcesList.getPreferredSize().height + 10));
-        sourcesList.setFont(font.deriveFont(font.getSize() + 3.5f));
+        Font font = deleteSourcesList.getFont();
+        deleteSourcesList.setMaximumSize(new Dimension(250, deleteSourcesList.getPreferredSize().height + 10));
+        deleteSourcesList.setFont(font.deriveFont(font.getSize() + 3.5f));
 
         listOfJComboBoxes.add(sharedModel);
-        card.add(buildLabeledColumn(sourcesList));
+        card.add(buildLabeledColumn(deleteSourcesList));
 
-        JButton deleteBtn = new JButton("Delete source");
+        deleteBtn = new JButton("Delete source");
         deleteBtn.putClientProperty("FlatLaf.style", "background: #8c2828; foreground: #fff; margin: 4,12,4,12");
         deleteBtn.setAlignmentX(LEFT_ALIGNMENT);
 
@@ -115,23 +140,26 @@ public class AdminPanel extends JPanel {
         deleteSourceSection.add(deleteBtn);
         deleteSourceSection.add(Box.createHorizontalStrut(50));
 
-        JLabel statusDeleteBySource = new JLabel();
+        statusDeleteBySource = new JLabel();
         deleteSourceSection.add(statusDeleteBySource);
         statusMsg.add(statusDeleteBySource);
 
         deleteBtn.addActionListener(e -> {
+            if(threadBusy) {
+                return;
+            }
+            else {
+                setBusy(true);
+            }
+
             if(!DialogUtils.confirm(this, "This will delete source and all it's articles. Continue?")) {
                 return;
             }
 
             deleteBtn.setEnabled(false);
-            clearLabelsOfOtherCars(statusDeleteBySource);
-            deleteBySourceLogic(
-                    statusDeleteBySource,
-                    deleteBtn,
-                    (RssSource) sourcesList.getSelectedItem(),
-                    listOfJComboBoxes
-            );
+            clearLabelsOfOtherCards(statusDeleteBySource);
+
+            deleteBySourceLogic();
         });
 
         card.add(deleteSourceSection);
@@ -139,6 +167,7 @@ public class AdminPanel extends JPanel {
         return card;
     }
 
+    private JLabel statusReloadSources;
     private Component reloadSourceCard() {
         JPanel card = buildCustomPanel();
 
@@ -155,13 +184,21 @@ public class AdminPanel extends JPanel {
         reloadSection.add(reloadBtn);
         reloadSection.add(Box.createHorizontalStrut(50));
 
-        JLabel statusReloadSources = new JLabel();
+        statusReloadSources = new JLabel();
         reloadSection.add(statusReloadSources);
         statusMsg.add(statusReloadSources);
 
         reloadBtn.addActionListener(e -> {
+            if(threadBusy) {
+                return;
+            }
+            else {
+                setBusy(true);
+            }
+
             setStatusMsg(statusReloadSources, "Downloading..", null);
-            clearLabelsOfOtherCars(statusReloadSources);
+            clearLabelsOfOtherCards(statusReloadSources);
+
             reloadSourcesLogic();
 
             setStatusMsg(statusReloadSources, "Successfully reloaded sources.", Color.GREEN);
@@ -173,6 +210,10 @@ public class AdminPanel extends JPanel {
     }
 
     AdminArticleLoadWorker adminArticleLoadWorker;
+    private JButton loadBtn;
+    private ButtonGroup buttonGroup;
+    private JLabel statusLoadArticles;
+    private JComboBox<RssSource> loadSourcesList;
     private Component loadArticlesCard() {
         JPanel card = buildCustomPanel();
 
@@ -189,7 +230,7 @@ public class AdminPanel extends JPanel {
         oneSourceToggle.putClientProperty("FlatLaf.style",
                 "margin: 5,5,5,5; selectedBackground: #2563eb; selectedForeground: #fff");
 
-        ButtonGroup buttonGroup = new ButtonGroup();
+        buttonGroup = new ButtonGroup();
         allSourcesToggle.setActionCommand("all");
         oneSourceToggle.setActionCommand("one");
         buttonGroup.add(allSourcesToggle);
@@ -207,23 +248,23 @@ public class AdminPanel extends JPanel {
         card.add(Box.createHorizontalStrut(5));
 
         DefaultComboBoxModel<RssSource> sharedModel = new DefaultComboBoxModel<>(importService.getAllSources());
-        JComboBox<RssSource> sourcesList = new JComboBox<>(sharedModel);
+        loadSourcesList = new JComboBox<>(sharedModel);
 
         listOfJComboBoxes.add(sharedModel);
 
-        Font font = sourcesList.getFont();
-        sourcesList.setPreferredSize(new Dimension(250, sourcesList.getPreferredSize().height + 10));
-        sourcesList.setFont(font.deriveFont(font.getSize() + 2.5f));
+        Font font = loadSourcesList.getFont();
+        loadSourcesList.setPreferredSize(new Dimension(250, loadSourcesList.getPreferredSize().height + 10));
+        loadSourcesList.setFont(font.deriveFont(font.getSize() + 2.5f));
 
         JPanel comboBoxSection = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         comboBoxSection.setAlignmentX(LEFT_ALIGNMENT);
         comboBoxSection.setOpaque(false);
-        comboBoxSection.add(buildLabeledColumn(sourcesList));
+        comboBoxSection.add(buildLabeledColumn(loadSourcesList));
         comboBoxSection.add(Box.createVerticalStrut(65));
 
         card.add(comboBoxSection);
 
-        JButton loadBtn = new JButton("Load articles");
+        loadBtn = new JButton("Load articles");
         loadBtn.putClientProperty("FlatLaf.style", "background: #2563eb; foreground: #fff; margin: 6,14,6,14");
         loadBtn.setAlignmentX(LEFT_ALIGNMENT);
 
@@ -234,37 +275,47 @@ public class AdminPanel extends JPanel {
         loadBtnSection.add(loadBtn);
         loadBtnSection.add(Box.createHorizontalStrut(50));
 
-        JLabel loadArticles = new JLabel();
-        loadBtnSection.add(loadArticles);
-        statusMsg.add(loadArticles);
+        statusLoadArticles = new JLabel();
+        loadBtnSection.add(statusLoadArticles);
+        statusMsg.add(statusLoadArticles);
 
         card.add(loadBtnSection);
         card.add(Box.createVerticalStrut(12));
 
         oneSourceToggle.addActionListener(e -> {
-            sourcesList.setEnabled(true);
+            if(!threadBusy) {
+                loadSourcesList.setEnabled(true);
+            }
         });
 
         allSourcesToggle.addActionListener(e -> {
-            sourcesList.setEnabled(false);
+            loadSourcesList.setEnabled(false);
         });
         allSourcesToggle.doClick();
 
         loadBtn.addActionListener(e -> {
+            if(threadBusy) {
+                return;
+            }
+            else {
+                setBusy(true);
+            }
+
             loadBtn.setEnabled(false);
-            clearLabelsOfOtherCars(loadArticles);
-            importLogic(
-                    buttonGroup.getSelection(),
-                    (RssSource) sourcesList.getSelectedItem(),
-                    loadArticles,
-                    loadBtn
-            );
+            loadSourcesList.setEnabled(false);
+            Enumeration<AbstractButton> options = buttonGroup.getElements();
+            while (options.hasMoreElements()) {
+                options.nextElement().setEnabled(false);
+            }
+            clearLabelsOfOtherCards(statusLoadArticles);
+
+            importLogic();
         });
 
         return card;
     }
 
-    private void clearLabelsOfOtherCars(JLabel activeLabel) {
+    private void clearLabelsOfOtherCards(JLabel activeLabel) {
         for (JLabel label : statusMsg) {
             label.setVisible(Objects.equals(label, activeLabel));
         }
@@ -324,28 +375,40 @@ public class AdminPanel extends JPanel {
     }
 
 
-    private void deleteAllLogic(JLabel statusLabel, JButton deleteAllBtn) {
-        adminDeleteWorker = new AdminDeleteWorker(statusLabel, deleteAllBtn, null, null);
+    private void deleteAllLogic() {
+        adminDeleteWorker = new AdminDeleteWorker(
+                articleRepository,
+                sourceRepository,
+                null,
+                statusLabelDeleteAll,
+                deleteAllBtn,
+                null
+        );
+
         try {
-            setStatusMsg(statusLabel, "Loading...", null);
+            setStatusMsg(statusLabelDeleteAll, "Loading...", null);
             adminDeleteWorker.execute();
         }
         catch (Exception exception) {
-            setStatusMsg(statusLabel, "Error occurred!", Color.RED);
+            setStatusMsg(statusLabelDeleteAll, "Error occurred!", Color.RED);
         }
     }
 
-    private void deleteBySourceLogic(
-            JLabel statusLabel, JButton deleteBtn, RssSource selectedItem, List<DefaultComboBoxModel<RssSource>> listOfJComboBoxes
-    ) {
+    private void deleteBySourceLogic() {
         try {
-            adminDeleteWorker = new AdminDeleteWorker(statusLabel, deleteBtn, selectedItem, listOfJComboBoxes);
+            adminDeleteWorker = new AdminDeleteWorker(
+                    articleRepository,
+                    sourceRepository,
+                    (RssSource) deleteSourcesList.getSelectedItem(),
+                    statusDeleteBySource,
+                    deleteBtn,
+                    listOfJComboBoxes);
 
-            setStatusMsg(statusLabel, "Loading...", null);
+            setStatusMsg(statusDeleteBySource, "Loading...", null);
             adminDeleteWorker.execute();
         }
         catch (Exception exception) {
-            setStatusMsg(statusLabel, "Error occurred!", Color.RED);
+            setStatusMsg(statusDeleteBySource, "Error occurred!", Color.RED);
         }
     }
 
@@ -356,18 +419,28 @@ public class AdminPanel extends JPanel {
 
             jComboBox.setSelectedItem(jComboBox.getElementAt(0));
         }
+
+        threadBusy = false;
     }
 
-    private void importLogic(ButtonModel selection, RssSource selectedItem, JLabel statusLabel, JButton loadBtn) {
-        adminArticleLoadWorker = new AdminArticleLoadWorker(importService, statusLabel, loadBtn);
+    private void importLogic() {
+        adminArticleLoadWorker = new AdminArticleLoadWorker(
+                importService,
+                loadSourcesList,
+                buttonGroup,
+                statusLoadArticles,
+                loadBtn
+        );
+
         try {
-            setStatusMsg(statusLabel, "Downloading...", null);
-            if (Objects.equals(selection.getActionCommand(), "all")) {
+            setStatusMsg(statusLoadArticles, "Downloading...", null);
+            if (Objects.equals(buttonGroup.getSelection().getActionCommand(), "all")) {
                 adminArticleLoadWorker.execute();
             }
-            else if (Objects.equals(selection.getActionCommand(), "one")) {
-                SourceRepositoryImpl sourceRepository  = new SourceRepositoryImpl();
+            else if (Objects.equals(buttonGroup.getSelection().getActionCommand(), "one")) {
+                SourceRepositoryImpl sourceRepository = new SourceRepositoryImpl();
 
+                RssSource selectedItem = (RssSource) loadSourcesList.getSelectedItem();
                 List<Source> sources = sourceRepository.read();
                 if(sources.contains(new Source(0, selectedItem.getName(), selectedItem.getFeedUrl()))) {
                     AdminDeleteWorker deleteSource = new AdminDeleteWorker(selectedItem.getFeedUrl());
@@ -379,7 +452,7 @@ public class AdminPanel extends JPanel {
             }
         }
         catch (Exception exception) {
-            setStatusMsg(statusLabel, "Error occurred!", Color.RED);
+            setStatusMsg(statusLoadArticles, "Error occurred!", Color.RED);
         }
     }
 
@@ -393,11 +466,13 @@ public class AdminPanel extends JPanel {
         label.setForeground(color);
     }
 
-
     public static void removeSourceFromJComboBoxes(RssSource source, List<DefaultComboBoxModel<RssSource>> listOfJComboBoxes ) {
         for(DefaultComboBoxModel<RssSource> jComboBox : listOfJComboBoxes) {
             jComboBox.removeElement(source);
         }
     }
 
+    public static void setBusy(boolean status) {
+        threadBusy = status;
+    }
 }

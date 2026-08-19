@@ -5,8 +5,6 @@ import hr.algebra.app.forms.RegisterPanel;
 import hr.algebra.dao.models.User;
 import hr.algebra.dao.repositories.user.UserRepositoryImpl;
 import hr.algebra.utilities.gui.DialogUtils;
-import hr.algebra.utilities.gui.Icons;
-import hr.algebra.utilities.gui.Messages;
 import hr.algebra.utilities.security.Password;
 
 import javax.swing.*;
@@ -31,7 +29,7 @@ public class AuthWindow extends JFrame {
         setTitle("News App - Sign in");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        setIconImage(Icons.load("favicon.png").getImage());
+        setIconImage(new ImageIcon("/icons/favicon.png").getImage());
         setSize(380, 400);
         setResizable(false);
         setLocationRelativeTo(null);
@@ -79,7 +77,7 @@ public class AuthWindow extends JFrame {
         String username =  registerPanel.getUsername();
         try {
             if(userRepository.exists(username)) {
-                DialogUtils.showError(this, Messages.USERNAME_TAKEN);
+                DialogUtils.showError(this, "Username is already registered.");
                 return;
             }
 
@@ -87,31 +85,31 @@ public class AuthWindow extends JFrame {
             char[] confirm  = registerPanel.getConfirm();
 
             if(password.length < 6) {
-                DialogUtils.showError(this, Messages.PASSWORDS_INVALID);
+                DialogUtils.showError(this, "Password must be at least 6 characters long.");
                 return;
             }
 
             if (!Arrays.equals(password, confirm)) {
-                DialogUtils.showError(this, Messages.PASSWORDS_DIFFER);
+                DialogUtils.showError(this, "The passwords do not match.");
                 return;
             }
 
             userRepository.register(new User(0, username, Password.hash(new String(password))));
 
-            DialogUtils.showInfo(this, Messages.REGISTRATION_SUCCESS);
+            DialogUtils.showInfo(this, "Registration complete. Please sign in.");
 
             tabs.setSelectedIndex(0);
         }
         catch (SQLException exception) {
-            DialogUtils.showError(this, Messages.DB_ERROR);
+            DialogUtils.showError(this, "A database error occurred. Please try again.");
         }
     }
 
     private void loginLogic() {
         String username = loginPanel.getUsername();
         try {
-            if(!userRepository.exists(username)) {
-                DialogUtils.showError(this, Messages.LOGIN_FAILED);
+            if(userRepository.exists(username)) {
+                DialogUtils.showError(this, "Invalid username or password.");
                 return;
             }
 
@@ -119,7 +117,7 @@ public class AuthWindow extends JFrame {
             char[] password = loginPanel.getPassword();
 
             if(!Password.verify(new String(password), user.getPasswordHash())) {
-                DialogUtils.showError(this, Messages.PASSWORDS_WRONG);
+                DialogUtils.showError(this, "Wrong password,");
                 return;
             }
 
@@ -127,7 +125,7 @@ public class AuthWindow extends JFrame {
             this.dispose();
 
         } catch (SQLException exception) {
-            DialogUtils.showError(this, Messages.DB_ERROR);
+            DialogUtils.showError(this, "A database error occurred. Please try again.");
         }
     }
 

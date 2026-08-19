@@ -106,7 +106,7 @@ public class RssImportService {
 
             int articleId = articleRepository.create(article);
 
-            if(articleId != -1) {
+            if(articleId != 0) {
                 sumOfImports++;
             }
         }

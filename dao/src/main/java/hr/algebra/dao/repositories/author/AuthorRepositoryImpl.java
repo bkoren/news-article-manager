@@ -1,13 +1,13 @@
 package hr.algebra.dao.repositories.author;
 
-import hr.algebra.dao.repositories.Base;
+import hr.algebra.dao.repositories.BaseRepository;
 import hr.algebra.dao.models.Author;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
-public class AuthorRepositoryImpl extends Base<Author> implements AuthorRepository {
+public class AuthorRepositoryImpl extends BaseRepository<Author> implements AuthorRepository {
 
     @Override
     protected Author map(ResultSet rs) throws SQLException {

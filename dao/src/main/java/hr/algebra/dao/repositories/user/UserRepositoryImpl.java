@@ -1,6 +1,6 @@
 package hr.algebra.dao.repositories.user;
 
-import hr.algebra.dao.repositories.Base;
+import hr.algebra.dao.repositories.BaseRepository;
 import hr.algebra.dao.models.Role;
 import hr.algebra.dao.models.User;
 
@@ -8,7 +8,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
-public class UserRepositoryImpl extends Base<User> implements UserRepository {
+public class UserRepositoryImpl extends BaseRepository<User> implements UserRepository {
 
     @Override
     protected User map(ResultSet rs) throws SQLException {
@@ -33,10 +33,10 @@ public class UserRepositoryImpl extends Base<User> implements UserRepository {
 
     @Override
     public boolean exists(String username) throws SQLException {
-        return executeReturn(
-                "{? = call p_User_Exists(?)}",
+        return executeRead(
+                "{call p_User_Exists(?)}",
                 statement -> statement.setString(2, username)
-        ) != 0;
+        ).isEmpty();
     }
 
     @Override

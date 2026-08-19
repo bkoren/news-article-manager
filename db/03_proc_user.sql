@@ -29,10 +29,12 @@ AS
 BEGIN
 	SET NOCOUNT ON;
 		
-	IF EXISTS(SELECT TOP 1 [IDUser] FROM [User] WHERE [Username] = @Username)
-	RETURN 1;
-
-	RETURN 0;
+	SELECT
+		[IDUser]
+	FROM
+		[dbo].[User]
+	WHERE 
+		[Username] = @Username;
 END;
 GO
 

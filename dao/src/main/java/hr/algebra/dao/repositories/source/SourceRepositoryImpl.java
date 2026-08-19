@@ -1,35 +1,29 @@
 package hr.algebra.dao.repositories.source;
 
-import hr.algebra.dao.repositories.Base;
+import hr.algebra.dao.repositories.BaseRepository;
 import hr.algebra.dao.models.Source;
+import hr.algebra.dao.repositories.StatementBinder;
 
+import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.ParseException;
 import java.util.List;
 
-public class SourceRepositoryImpl extends Base<Source> implements SourceRepository {
+public class SourceRepositoryImpl extends BaseRepository<Source> implements SourceRepository {
 
     @Override
-    protected Source map(ResultSet rs) throws SQLException {
+    protected Source map(ResultSet databaseResult) throws SQLException {
         return new Source(
-                rs.getInt("IDSource"),
-                rs.getString("Name"),
-                rs.getString("FeedUrl")
+                databaseResult.getInt("IDSource"),
+                databaseResult.getString("Name"),
+                databaseResult.getString("FeedUrl")
         );
     }
 
     @Override
     public List<Source> read() throws SQLException {
         return executeRead("{call p_Source_Read}");
-    }
-
-    public int readIdByName(String name) throws SQLException {
-        List<Source> sources = executeRead(
-                "{call p_Source_ReadByName(?)}",
-                statement -> statement.setString(1, name)
-        );
-
-        return (!sources.isEmpty()) ? sources.getFirst().getSourceId() : -1;
     }
 
     @Override
@@ -48,11 +42,20 @@ public class SourceRepositoryImpl extends Base<Source> implements SourceReposito
     }
 
     @Override
-    public void delete(int sourceId) throws SQLException {
-        executeReturn(
-            "{? = call p_Source_Delete (?)}",
-            statement -> statement.setInt(2, sourceId)
-        );
+    public int delete(String name) throws SQLException {
+        try {
+            return Integer.parseInt(
+                    executeDelete(
+                        "{call p_Source_Delete(?)}",
+                        statement -> {
+                            statement.setString(1, name);
+                        }
+                    )
+            );
+        }
+        catch (NumberFormatException exception) {
+            return -1;
+        }
     }
 
     @Override

@@ -6,6 +6,9 @@ import hr.algebra.app.forms.AuthorPanel;
 import hr.algebra.app.forms.CategoryPanel;
 import hr.algebra.dao.models.Role;
 import hr.algebra.dao.models.User;
+import hr.algebra.dao.repositories.article.ArticleRepositoryImpl;
+import hr.algebra.dao.repositories.source.SourceRepository;
+import hr.algebra.dao.repositories.source.SourceRepositoryImpl;
 
 import javax.swing.*;
 import java.awt.*;
@@ -14,9 +17,14 @@ public class MainWindow extends JFrame{
     private final CardLayout containersLayout = new CardLayout();
     private final JPanel     displayContent   = new JPanel(containersLayout);
 
+    private final SourceRepositoryImpl sourceRepository;
+
+
     private final User user;
     public MainWindow(User user) {
         this.user = user;
+
+        sourceRepository = new SourceRepositoryImpl();
 
         ArticlePanel articlePanel = new ArticlePanel();
         displayContent.add(articlePanel, "articles");

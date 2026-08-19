@@ -2,9 +2,8 @@ package hr.algebra.app.background;
 
 import hr.algebra.app.forms.AdminPanel;
 import hr.algebra.dao.models.Article;
+import hr.algebra.dao.models.Source;
 import hr.algebra.dao.repositories.article.ArticleRepositoryImpl;
-import hr.algebra.dao.repositories.author.AuthorRepositoryImpl;
-import hr.algebra.dao.repositories.category.CategoryRepositoryImpl;
 import hr.algebra.dao.repositories.source.SourceRepositoryImpl;
 import hr.algebra.dao.rss.RssSource;
 
@@ -17,16 +16,13 @@ public class AdminDeleteWorker extends SwingWorker<Integer, String> {
     private JLabel  statusLabel;
     private JButton deleteBtn;
 
-    private SourceRepositoryImpl  sourceRepository  = new SourceRepositoryImpl();
-    private ArticleRepositoryImpl articleRepository = new ArticleRepositoryImpl(
-                new AuthorRepositoryImpl(),
-                new CategoryRepositoryImpl()
-        );
+    private SourceRepositoryImpl  sourceRepository;
+    private ArticleRepositoryImpl articleRepository;
 
-    private final boolean usageFromBackend;
     private RssSource source;
 
     private List<DefaultComboBoxModel<RssSource>> listOfJComboBoxes;
+    private final boolean usageFromBackend;
 
     public AdminDeleteWorker(String feedUrl) {
         for (RssSource rssSource : RssSource.values()) {
@@ -39,15 +35,19 @@ public class AdminDeleteWorker extends SwingWorker<Integer, String> {
     }
 
     public AdminDeleteWorker(
+            ArticleRepositoryImpl articleRepository,
+            SourceRepositoryImpl sourceRepository,
+            RssSource source,
             JLabel statusLabel,
             JButton deleteAllBtn,
-            RssSource source,
             List<DefaultComboBoxModel<RssSource>> listOfJComboBoxes
     ) {
         this.statusLabel = statusLabel;
         this.deleteBtn   = deleteAllBtn;
 
         this.source = source;
+        this.articleRepository = articleRepository;
+        this.sourceRepository = sourceRepository;
 
         this.listOfJComboBoxes = listOfJComboBoxes;
 
@@ -55,37 +55,46 @@ public class AdminDeleteWorker extends SwingWorker<Integer, String> {
     }
 
     @Override
+    protected void done(){
+        if(deleteBtn != null) {
+            deleteBtn.setEnabled(true);
+        }
+
+        AdminPanel.setBusy(false);
+    }
+
+    @Override
     protected Integer doInBackground() {
         try {
-            if(source == null) {
-                articleRepository.deleteAll();
+            if(source != null) {
+                int sourceId = sourceRepository.delete(source.getName());
+
+                if(sourceId != -1) {
+                    List<Article> articles = articleRepository.read(sourceId);
+                    for (Article article : articles) {
+                        articleRepository.delete(article.getArticleId());
+                    }
+                }
+            }
+            else {
+                articleRepository.delete(0);
                 AdminPanel.setStatusMsg(statusLabel, "Everything deleted successfully.", Color.GREEN);
 
                 deleteBtn.setEnabled(true);
                 return 0;
             }
 
-            int sourceId = sourceRepository.readIdByName(source.getName());
-
-            if(sourceId != -1) {
-                List<Article> articles = articleRepository.readBySource(sourceId);
-                for (Article article : articles) {
-                    articleRepository.delete(article.getArticleId());
-                }
+            if(usageFromBackend) {
+               return 0;
             }
 
-            sourceRepository.delete(sourceId);
-
-            if(!usageFromBackend) {
-                AdminPanel.removeSourceFromJComboBoxes(source, listOfJComboBoxes);
-                AdminPanel.setStatusMsg(statusLabel, "Source and it's articles successfully deleted.", Color.GREEN);
-            }
+            AdminPanel.removeSourceFromJComboBoxes(source, listOfJComboBoxes);
+            AdminPanel.setStatusMsg(statusLabel, "Source and it's articles successfully deleted.", Color.GREEN);
         }
         catch (Exception exception) {
             AdminPanel.setStatusMsg(statusLabel, "Error occurred.", Color.RED);
         }
 
-        deleteBtn.setEnabled(true);
         return 0;
     }
 
