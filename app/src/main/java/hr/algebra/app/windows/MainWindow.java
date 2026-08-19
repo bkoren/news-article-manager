@@ -19,7 +19,6 @@ public class MainWindow extends JFrame{
 
     private final SourceRepositoryImpl sourceRepository;
 
-
     private final User user;
     public MainWindow(User user) {
         this.user = user;
@@ -91,6 +90,8 @@ public class MainWindow extends JFrame{
 
         this.setJMenuBar(menuBar);
         this.setVisible(true);
+
+        openArticlePanel();
     }
 
     private void openCategoriesPanel() {
