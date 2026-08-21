@@ -7,6 +7,8 @@ import hr.algebra.app.forms.CategoryPanel;
 import hr.algebra.dao.models.Role;
 import hr.algebra.dao.models.User;
 import hr.algebra.dao.repositories.article.ArticleRepositoryImpl;
+import hr.algebra.dao.repositories.author.AuthorRepositoryImpl;
+import hr.algebra.dao.repositories.category.CategoryRepositoryImpl;
 import hr.algebra.dao.repositories.source.SourceRepository;
 import hr.algebra.dao.repositories.source.SourceRepositoryImpl;
 
@@ -18,23 +20,37 @@ public class MainWindow extends JFrame{
     private final JPanel     displayContent   = new JPanel(containersLayout);
 
     private final SourceRepositoryImpl sourceRepository;
+    private final AuthorRepositoryImpl authorRepository;
+    private final CategoryRepositoryImpl categoryRepository;
+    private final ArticleRepositoryImpl articleRepository;
 
     private final User user;
     public MainWindow(User user) {
         this.user = user;
 
         sourceRepository = new SourceRepositoryImpl();
+        authorRepository = new AuthorRepositoryImpl();
+        categoryRepository = new CategoryRepositoryImpl();
+        articleRepository = new ArticleRepositoryImpl(
+                authorRepository,
+                categoryRepository
+        );
 
-        ArticlePanel articlePanel = new ArticlePanel();
+        ArticlePanel articlePanel = new ArticlePanel(articleRepository);
         displayContent.add(articlePanel, "articles");
 
-        AuthorPanel authorPanel = new AuthorPanel();
+        AuthorPanel authorPanel = new AuthorPanel(authorRepository);
         displayContent.add(authorPanel, "authors");
 
-        CategoryPanel categoryPanel = new CategoryPanel();
+        CategoryPanel categoryPanel = new CategoryPanel(categoryRepository);
         displayContent.add(categoryPanel, "categories");
 
-        AdminPanel adminPanel = new AdminPanel();
+        AdminPanel adminPanel = new AdminPanel(
+                sourceRepository,
+                authorRepository,
+                categoryRepository,
+                articleRepository
+        );
         displayContent.add(adminPanel, "admin");
 
         containersLayout.show(displayContent, "articles");

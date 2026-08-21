@@ -25,11 +25,26 @@ public class RssImportService {
     private final RssItemMapper mapper;
     private final AssetService asset;
 
+    SourceRepositoryImpl     sourceRepository;
+    AuthorRepository         authorRepository;
+    CategoryRepository       categoryRepository;
+    ArticleRepositoryImpl    articleRepository;
+
     private final RssSource[] allSources;
 
-    public RssImportService() throws AssetException {
+    public RssImportService(
+            SourceRepositoryImpl sourceRepository,
+            AuthorRepositoryImpl authorRepository,
+            CategoryRepositoryImpl categoryRepository,
+            ArticleRepositoryImpl articleRepository
+    ) throws AssetException {
         mapper = new RssItemMapper();
         asset  = new AssetService();
+
+        this.sourceRepository = sourceRepository;
+        this.authorRepository = authorRepository;
+        this.categoryRepository = categoryRepository;
+        this.articleRepository = articleRepository;
 
         allSources = RssSource.values();
     }
@@ -73,13 +88,6 @@ public class RssImportService {
     }
 
     private int exportToDB(List<ParsedItem> parsed) throws SQLException {
-        SourceRepositoryImpl     sourceRepository     = new SourceRepositoryImpl();
-        AuthorRepository         authorRepository     = new AuthorRepositoryImpl();
-        CategoryRepository       categoryRepository   = new CategoryRepositoryImpl();
-        ArticleRepositoryImpl    articleRepository    = new ArticleRepositoryImpl(
-                authorRepository, categoryRepository
-        );
-
         int sumOfImports = 0;
         int sourceId = sourceRepository.create(parsed.getFirst().source());
         for (ParsedItem parsedItem : parsed) {

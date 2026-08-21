@@ -26,8 +26,8 @@ public class AuthorPanel extends JPanel {
 
     private List<Author> authorList;
 
-    public AuthorPanel() {
-        authorRepository = new AuthorRepositoryImpl();
+    public AuthorPanel(AuthorRepositoryImpl authorRepository) {
+        this.authorRepository = authorRepository;
 
         setLayout(new BorderLayout());
 

@@ -33,11 +33,8 @@ public class ArticlePanel extends JPanel {
     private JTable articleTable;
     private DefaultTableModel tableModel;
 
-    public ArticlePanel() {
-        articleRepository = new ArticleRepositoryImpl(
-                new AuthorRepositoryImpl(),
-                new CategoryRepositoryImpl()
-        );
+    public ArticlePanel(ArticleRepositoryImpl articleRepository) {
+        this.articleRepository = articleRepository;
 
         setLayout(new BorderLayout());
 
@@ -70,6 +67,8 @@ public class ArticlePanel extends JPanel {
             remove(articleTable);
             add(noContentMessage("A database error occurred. Please try again."), BorderLayout.CENTER);
         }
+
+        refreshTable();
     }
 
     private JLabel noContentMessage(String message) {

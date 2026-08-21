@@ -6,6 +6,7 @@ import hr.algebra.dao.exceptions.AssetException;
 import hr.algebra.dao.models.Source;
 import hr.algebra.dao.repositories.article.ArticleRepositoryImpl;
 import hr.algebra.dao.repositories.author.AuthorRepositoryImpl;
+import hr.algebra.dao.repositories.category.CategoryRepository;
 import hr.algebra.dao.repositories.category.CategoryRepositoryImpl;
 import hr.algebra.dao.repositories.source.SourceRepositoryImpl;
 import hr.algebra.dao.rss.RssImportService;
@@ -25,21 +26,32 @@ public class AdminPanel extends JPanel {
     RssImportService importService;
 
     private final SourceRepositoryImpl   sourceRepository;
+    private final AuthorRepositoryImpl   authorRepository;
+    private final CategoryRepositoryImpl categoryRepository;
     private final ArticleRepositoryImpl  articleRepository;
 
-    public AdminPanel() {
+    public AdminPanel(
+            SourceRepositoryImpl sourceRepository,
+            AuthorRepositoryImpl authorRepository,
+            CategoryRepositoryImpl categoryRepository,
+            ArticleRepositoryImpl articleRepository
+    ) {
+        this.sourceRepository = sourceRepository;
+        this.authorRepository = authorRepository;
+        this.categoryRepository = categoryRepository;
+        this.articleRepository = articleRepository;
+
         try {
-            importService = new RssImportService();
+            importService = new RssImportService(
+                    sourceRepository,
+                    authorRepository,
+                    categoryRepository,
+                    articleRepository
+            );
         }
         catch (AssetException exception) {
             DialogUtils.showError(this, exception.getMessage());
         }
-
-        sourceRepository    = new SourceRepositoryImpl();
-        articleRepository   = new ArticleRepositoryImpl(
-                new AuthorRepositoryImpl(),
-                new CategoryRepositoryImpl()
-        );
 
         buildUi();
     }

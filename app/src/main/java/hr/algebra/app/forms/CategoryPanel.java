@@ -29,8 +29,8 @@ public class CategoryPanel extends JPanel {
 
     private List<Category> categoryList;
 
-    public CategoryPanel() {
-        categoryRepository = new CategoryRepositoryImpl();
+    public CategoryPanel(CategoryRepositoryImpl categoryRepository) {
+        this.categoryRepository = categoryRepository;
 
         setLayout(new BorderLayout());
 
