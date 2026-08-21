@@ -3,11 +3,15 @@ package hr.algebra.dao.repositories.author;
 import hr.algebra.dao.repositories.BaseRepository;
 import hr.algebra.dao.models.Author;
 
+import javax.swing.*;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class AuthorRepositoryImpl extends BaseRepository<Author> implements AuthorRepository {
+
+    private final List<Runnable> listeners = new CopyOnWriteArrayList<>();
 
     @Override
     protected Author map(ResultSet rs) throws SQLException {
@@ -48,6 +52,8 @@ public class AuthorRepositoryImpl extends BaseRepository<Author> implements Auth
             "{call p_Author_Delete (?)}",
             statement -> statement.setInt(1, authorId)
         );
+
+        triggerListeners();
     }
 
     @Override
@@ -59,5 +65,19 @@ public class AuthorRepositoryImpl extends BaseRepository<Author> implements Auth
                 statement.setString(2, author.getName());
             }
         );
+
+        triggerListeners();
+    }
+
+    public void addListener(Runnable listener) {
+        listeners.add(listener);
+    }
+
+    public void triggerListeners() {
+        SwingUtilities.invokeLater(() -> {
+            for(Runnable listener : listeners) {
+                listener.run();
+            }
+        });
     }
 }

@@ -27,6 +27,8 @@ public class AdminPanel extends JPanel {
 
     private final SourceRepositoryImpl   sourceRepository;
     private final ArticleRepositoryImpl  articleRepository;
+    private final AuthorRepositoryImpl   authorRepository;
+    private final CategoryRepositoryImpl categoryRepository;
 
     public AdminPanel(
             SourceRepositoryImpl sourceRepository,
@@ -36,6 +38,8 @@ public class AdminPanel extends JPanel {
     ) {
         this.sourceRepository = sourceRepository;
         this.articleRepository = articleRepository;
+        this.authorRepository = authorRepository;
+        this.categoryRepository = categoryRepository;
 
         try {
             importService = new RssImportService(
@@ -387,6 +391,8 @@ public class AdminPanel extends JPanel {
         adminDeleteWorker = new AdminDeleteWorker(
                 articleRepository,
                 sourceRepository,
+                authorRepository,
+                categoryRepository,
                 null,
                 statusLabelDeleteAll,
                 deleteAllBtn,
@@ -407,6 +413,8 @@ public class AdminPanel extends JPanel {
             adminDeleteWorker = new AdminDeleteWorker(
                     articleRepository,
                     sourceRepository,
+                    null,
+                    null,
                     (RssSource) deleteSourcesList.getSelectedItem(),
                     statusDeleteBySource,
                     deleteBtn,

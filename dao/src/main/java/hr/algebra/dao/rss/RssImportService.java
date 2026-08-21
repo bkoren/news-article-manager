@@ -26,8 +26,8 @@ public class RssImportService {
     private final AssetService asset;
 
     SourceRepositoryImpl     sourceRepository;
-    AuthorRepository         authorRepository;
-    CategoryRepository       categoryRepository;
+    AuthorRepositoryImpl         authorRepository;
+    CategoryRepositoryImpl       categoryRepository;
     ArticleRepositoryImpl    articleRepository;
 
     private final RssSource[] allSources;
@@ -120,6 +120,8 @@ public class RssImportService {
         }
 
         articleRepository.triggerListeners();
+        authorRepository.triggerListeners();
+        categoryRepository.triggerListeners();
 
         return sumOfImports;
     }

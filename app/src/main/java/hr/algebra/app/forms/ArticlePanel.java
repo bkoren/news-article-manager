@@ -23,9 +23,7 @@ public class ArticlePanel extends JPanel {
 
     private DefaultTableModel tableModel;
 
-    private JTable articleData;
-    private JScrollPane articleDisplay;
-
+    private JScrollPane articleDisplayTable;
     private JLabel messageLabel;
 
     public ArticlePanel(ArticleRepositoryImpl articleRepository) {
@@ -50,8 +48,8 @@ public class ArticlePanel extends JPanel {
             refreshUi();
         }
         catch (SQLException exception) {
-            if(articleDisplay != null) {
-                articleDisplay.setVisible(false);
+            if(articleDisplayTable != null) {
+                articleDisplayTable.setVisible(false);
             }
 
             add(noContentMessage("A database error occurred. Please try again."), BorderLayout.CENTER);
@@ -60,7 +58,9 @@ public class ArticlePanel extends JPanel {
 
     private void refreshUi() {
         if(articleList.isEmpty()) {
-            articleDisplay.setVisible(false);
+            if(articleDisplayTable != null) {
+                articleDisplayTable.setVisible(false);
+            }
 
             add(noContentMessage("No available content."), BorderLayout.CENTER);
             return;
@@ -70,14 +70,14 @@ public class ArticlePanel extends JPanel {
                 messageLabel.setVisible(false);
             }
 
-            if(articleDisplay != null) {
-                articleDisplay.setVisible(true);
+            if(articleDisplayTable != null) {
+                articleDisplayTable.setVisible(true);
             }
         }
 
         if(tableModel == null) {
-            articleDisplay = buildTable();
-            add(articleDisplay, BorderLayout.CENTER);
+            articleDisplayTable = buildTable();
+            add(articleDisplayTable, BorderLayout.CENTER);
         }
 
         tableModel.setRowCount(0);
@@ -103,7 +103,7 @@ public class ArticlePanel extends JPanel {
     }
 
     private JScrollPane buildTable() {
-        String[] columnNames = { " Title", " Source", " Published At" };
+        String[] columnNames = { "Title", "Source", "Published At" };
 
         tableModel = new DefaultTableModel(columnNames, 0) {
             @Override
@@ -112,7 +112,7 @@ public class ArticlePanel extends JPanel {
             }
         };
 
-        articleData = new JTable(tableModel);
+        JTable articleData = new JTable(tableModel);
         articleData.setFillsViewportHeight(true);
         articleData.setAutoCreateRowSorter(false);
         articleData.setFont(articleData.getFont().deriveFont(14f));

@@ -2,8 +2,11 @@ package hr.algebra.app.background;
 
 import hr.algebra.app.forms.AdminPanel;
 import hr.algebra.dao.models.Article;
+import hr.algebra.dao.models.Category;
 import hr.algebra.dao.models.Source;
 import hr.algebra.dao.repositories.article.ArticleRepositoryImpl;
+import hr.algebra.dao.repositories.author.AuthorRepositoryImpl;
+import hr.algebra.dao.repositories.category.CategoryRepositoryImpl;
 import hr.algebra.dao.repositories.source.SourceRepositoryImpl;
 import hr.algebra.dao.rss.RssSource;
 
@@ -18,6 +21,8 @@ public class AdminDeleteWorker extends SwingWorker<Integer, String> {
 
     private SourceRepositoryImpl  sourceRepository;
     private ArticleRepositoryImpl articleRepository;
+    private AuthorRepositoryImpl authorRepository;
+    private CategoryRepositoryImpl categoryRepository;
 
     private RssSource source;
 
@@ -37,6 +42,8 @@ public class AdminDeleteWorker extends SwingWorker<Integer, String> {
     public AdminDeleteWorker(
             ArticleRepositoryImpl articleRepository,
             SourceRepositoryImpl sourceRepository,
+            AuthorRepositoryImpl authorRepository,
+            CategoryRepositoryImpl categoryRepository,
             RssSource source,
             JLabel statusLabel,
             JButton deleteAllBtn,
@@ -48,6 +55,8 @@ public class AdminDeleteWorker extends SwingWorker<Integer, String> {
         this.source = source;
         this.articleRepository = articleRepository;
         this.sourceRepository = sourceRepository;
+        this.authorRepository = authorRepository;
+        this.categoryRepository = categoryRepository;
 
         this.listOfJComboBoxes = listOfJComboBoxes;
 
@@ -79,6 +88,9 @@ public class AdminDeleteWorker extends SwingWorker<Integer, String> {
             else {
                 articleRepository.delete(0);
                 AdminPanel.setStatusMsg(statusLabel, "Everything deleted successfully.", Color.GREEN);
+
+                authorRepository.triggerListeners();
+                categoryRepository.triggerListeners();
 
                 deleteBtn.setEnabled(true);
                 return 0;

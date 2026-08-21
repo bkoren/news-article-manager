@@ -3,11 +3,15 @@ package hr.algebra.dao.repositories.category;
 import hr.algebra.dao.repositories.BaseRepository;
 import hr.algebra.dao.models.Category;
 
+import javax.swing.*;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class CategoryRepositoryImpl extends BaseRepository<Category> implements CategoryRepository {
+
+    private final List<Runnable> listeners = new CopyOnWriteArrayList<>();
 
     @Override
     protected Category map(ResultSet rs) throws SQLException {
@@ -51,6 +55,8 @@ public class CategoryRepositoryImpl extends BaseRepository<Category> implements 
                 statement.setString(2, category.getName());
             }
         );
+
+        triggerListeners();
     }
 
     @Override
@@ -59,5 +65,19 @@ public class CategoryRepositoryImpl extends BaseRepository<Category> implements 
             "{call p_Category_Delete(?)}",
             statement -> statement.setInt(1, categoryId)
         );
+
+        triggerListeners();
+    }
+
+    public void addListener(Runnable listener) {
+        listeners.add(listener);
+    }
+
+    public void triggerListeners() {
+        SwingUtilities.invokeLater(() -> {
+            for(Runnable listener : listeners) {
+                listener.run();
+            }
+        });
     }
 }

@@ -12,4 +12,5 @@ public interface AuthorRepository {
     int create(Author author) throws SQLException;
     void update(Author author) throws SQLException;
     void delete(int authorId) throws SQLException;
+
 }

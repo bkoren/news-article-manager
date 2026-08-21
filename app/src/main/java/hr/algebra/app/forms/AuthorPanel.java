@@ -9,7 +9,6 @@ import java.awt.*;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 
 public class AuthorPanel extends JPanel {
@@ -19,8 +18,9 @@ public class AuthorPanel extends JPanel {
     private JButton editBtn;
     private JButton deleteBtn;
 
-    private JTable authorTable;
     private DefaultTableModel tableModel;
+    private JScrollPane authorDisplayTable;
+    private JLabel messageLabel;
 
     private final AuthorRepositoryImpl authorRepository;
 
@@ -28,6 +28,8 @@ public class AuthorPanel extends JPanel {
 
     public AuthorPanel(AuthorRepositoryImpl authorRepository) {
         this.authorRepository = authorRepository;
+
+        authorRepository.addListener(this::fillTheList);
 
         setLayout(new BorderLayout());
 
@@ -37,44 +39,66 @@ public class AuthorPanel extends JPanel {
 
         add(topSection, BorderLayout.NORTH);
 
-        try {
-            authorList = authorRepository.read();
-        }
-        catch (SQLException exception) {
-            add(noContentMessage("A database error occurred. Please try again."), BorderLayout.CENTER);
-        }
-
-        if(!authorList.isEmpty()) {
-            add(buildTable(), BorderLayout.CENTER);
-        }
-        else {
-            add(noContentMessage("No available content."), BorderLayout.CENTER);
-        }
+        fillTheList();
     }
 
     private void fillTheList() {
         try {
             authorList = authorRepository.read();
+            refreshUi();
         }
         catch (SQLException exception) {
-            remove(authorTable);
+            if(authorDisplayTable != null) {
+                authorDisplayTable.setVisible(false);
+            }
             add(noContentMessage("A database error occurred. Please try again."), BorderLayout.CENTER);
         }
     }
 
+    private void refreshUi() {
+        if(authorList.isEmpty()) {
+            if(authorDisplayTable != null) {
+                authorDisplayTable.setVisible(false);
+            }
+            add(noContentMessage("No available content."), BorderLayout.CENTER);
+            return;
+        }
+        else {
+            if(messageLabel != null) {
+                messageLabel.setVisible(false);
+            }
+
+            if(authorDisplayTable != null) {
+                authorDisplayTable.setVisible(true);
+            }
+        }
+
+        if(tableModel == null) {
+            authorDisplayTable = buildTable();
+            add(authorDisplayTable, BorderLayout.CENTER);
+        }
+
+        tableModel.setRowCount(0);
+        for (Author author : authorList) {
+            tableModel.addRow(new Object[] {
+                    author.getName(),
+            });
+        }
+    }
+
     private JLabel noContentMessage(String message) {
-        JLabel label = new JLabel(message);
+        messageLabel = new JLabel(message);
 
-        label.setFont(new Font("SansSerif", Font.BOLD, 48));
-        label.setForeground(Color.RED);
-        label.setHorizontalAlignment(SwingConstants.CENTER);
-        label.setVerticalAlignment(SwingConstants.CENTER);
+        messageLabel.setFont(new Font("SansSerif", Font.BOLD, 48));
+        messageLabel.setForeground(Color.RED);
+        messageLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        messageLabel.setVerticalAlignment(SwingConstants.CENTER);
 
-        return label;
+        return messageLabel;
     }
 
     private JScrollPane buildTable() {
-        String[] columnNames = { " Name", "Articles" };
+        String[] columnNames = { "Name", "Articles" };
 
         tableModel = new DefaultTableModel(columnNames, 0) {
             @Override
@@ -83,7 +107,7 @@ public class AuthorPanel extends JPanel {
             }
         };
 
-        authorTable = new JTable(tableModel);
+        JTable authorTable = new JTable(tableModel);
         authorTable.setFillsViewportHeight(true);
         authorTable.setAutoCreateRowSorter(false);
         authorTable.setFont(authorTable.getFont().deriveFont(14f));
@@ -125,7 +149,7 @@ public class AuthorPanel extends JPanel {
             header.removeMouseMotionListener(l);
         }
 
-        refreshTable();
+        refreshUi();
 
         return new JScrollPane(authorTable);
     }
@@ -157,14 +181,5 @@ public class AuthorPanel extends JPanel {
         searchBar.add(searchBtn);
 
         return searchBar;
-    }
-
-    private void refreshTable() {
-        tableModel.setRowCount(0);
-        for (Author author : authorList) {
-            tableModel.addRow(new Object[] {
-                    author.getName(),
-            });
-        }
     }
 }

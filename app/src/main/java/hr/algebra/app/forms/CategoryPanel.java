@@ -12,7 +12,6 @@ import java.awt.*;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 
 public class CategoryPanel extends JPanel {
@@ -22,15 +21,18 @@ public class CategoryPanel extends JPanel {
     private JButton editBtn;
     private JButton deleteBtn;
 
-    private JTable categoryTable;
+    private JScrollPane categoryDisplayTable;
+    private JLabel messageLabel;
+
     private DefaultTableModel tableModel;
-
-    private CategoryRepositoryImpl categoryRepository;
-
     private List<Category> categoryList;
+
+    private final CategoryRepositoryImpl categoryRepository;
 
     public CategoryPanel(CategoryRepositoryImpl categoryRepository) {
         this.categoryRepository = categoryRepository;
+
+        categoryRepository.addListener(this::fillTheList);
 
         setLayout(new BorderLayout());
 
@@ -40,44 +42,68 @@ public class CategoryPanel extends JPanel {
 
         add(topSection, BorderLayout.NORTH);
 
-        try {
-            categoryList = categoryRepository.read();
-        }
-        catch (SQLException exception) {
-            add(noContentMessage("A database error occurred. Please try again."), BorderLayout.CENTER);
-        }
-
-        if(!categoryList.isEmpty()) {
-            add(buildTable(), BorderLayout.CENTER);
-        }
-        else {
-            add(noContentMessage("No available content."), BorderLayout.CENTER);
-        }
+        fillTheList();
     }
 
     private void fillTheList() {
         try {
             categoryList = categoryRepository.read();
+            refreshUi();
         }
         catch (SQLException exception) {
-            remove(categoryTable);
+            if(categoryDisplayTable != null) {
+                categoryDisplayTable.setVisible(false);
+            }
             add(noContentMessage("A database error occurred. Please try again."), BorderLayout.CENTER);
         }
     }
 
+    private void refreshUi() {
+        if(categoryList.isEmpty()) {
+            if(categoryDisplayTable != null) {
+                categoryDisplayTable.setVisible(false);
+            }
+
+            add(noContentMessage("No available content."), BorderLayout.CENTER);
+            return;
+        }
+        else {
+            if(messageLabel != null) {
+                messageLabel.setVisible(false);
+            }
+
+            if(categoryDisplayTable != null) {
+                categoryDisplayTable.setVisible(true);
+            }
+        }
+
+        if(tableModel == null) {
+            categoryDisplayTable = buildTable();
+            add(categoryDisplayTable, BorderLayout.CENTER);
+        }
+
+        tableModel.setRowCount(0);
+
+        for (Category category : categoryList) {
+            tableModel.addRow(new Object[] {
+                    category.getName(),
+            });
+        }
+    }
+
     private JLabel noContentMessage(String message) {
-        JLabel label = new JLabel(message);
+        messageLabel = new JLabel(message);
 
-        label.setFont(new Font("SansSerif", Font.BOLD, 48));
-        label.setForeground(Color.RED);
-        label.setHorizontalAlignment(SwingConstants.CENTER);
-        label.setVerticalAlignment(SwingConstants.CENTER);
+        messageLabel.setFont(new Font("SansSerif", Font.BOLD, 48));
+        messageLabel.setForeground(Color.RED);
+        messageLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        messageLabel.setVerticalAlignment(SwingConstants.CENTER);
 
-        return label;
+        return messageLabel;
     }
 
     private JScrollPane buildTable() {
-        String[] columnNames = { " Name", "Articles" };
+        String[] columnNames = { "Name", "Articles" };
 
         tableModel = new DefaultTableModel(columnNames, 0) {
             @Override
@@ -86,21 +112,21 @@ public class CategoryPanel extends JPanel {
             }
         };
 
-        categoryTable = new JTable(tableModel);
-        categoryTable.setFillsViewportHeight(true);
-        categoryTable.setAutoCreateRowSorter(false);
-        categoryTable.setFont(categoryTable.getFont().deriveFont(14f));
-        categoryTable.setRowHeight(32);
-        categoryTable.setRowMargin(4);
-        categoryTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        JTable categoryData = new JTable(tableModel);
+        categoryData.setFillsViewportHeight(true);
+        categoryData.setAutoCreateRowSorter(false);
+        categoryData.setFont(categoryData.getFont().deriveFont(14f));
+        categoryData.setRowHeight(32);
+        categoryData.setRowMargin(4);
+        categoryData.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
-        TableColumn column = categoryTable.getColumnModel().getColumn(1);
+        TableColumn column = categoryData.getColumnModel().getColumn(1);
         column.setMinWidth(100);
         column.setMaxWidth(100);
         column.setPreferredWidth(100);
         column.setResizable(false);
 
-        JTableHeader header = categoryTable.getTableHeader();
+        JTableHeader header = categoryData.getTableHeader();
         header.setReorderingAllowed(false);
         header.setResizingAllowed(false);
         header.setFocusable(false);
@@ -127,9 +153,9 @@ public class CategoryPanel extends JPanel {
             header.removeMouseMotionListener(l);
         }
 
-        refreshTable();
+        refreshUi();
 
-        return new JScrollPane(categoryTable);
+        return new JScrollPane(categoryData);
     }
 
     private JPanel buildBtnSection() {
@@ -159,15 +185,5 @@ public class CategoryPanel extends JPanel {
         searchBar.add(searchBtn);
 
         return searchBar;
-    }
-
-    private void refreshTable() {
-        tableModel.setRowCount(0);
-
-        for (Category category : categoryList) {
-            tableModel.addRow(new Object[] {
-                    " " + category.getName(),
-            });
-        }
     }
 }
