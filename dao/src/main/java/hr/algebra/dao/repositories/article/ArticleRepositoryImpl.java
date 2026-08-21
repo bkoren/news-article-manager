@@ -10,15 +10,19 @@ import hr.algebra.dao.repositories.author.AuthorRepository;
 import hr.algebra.dao.repositories.category.CategoryRepository;
 import hr.algebra.dao.rss.AssetService;
 
+import javax.swing.*;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class ArticleRepositoryImpl extends BaseRepository<Article> implements ArticleRepository {
     private final AuthorRepository authorRepo;
     private final CategoryRepository categoryRepo;
+
+    private final List<Runnable> listeners = new CopyOnWriteArrayList<>();
 
     public ArticleRepositoryImpl(AuthorRepository authorRepo, CategoryRepository categoryRepo) {
         this.authorRepo = authorRepo;
@@ -156,6 +160,8 @@ public class ArticleRepositoryImpl extends BaseRepository<Article> implements Ar
                     }
             );
         }
+
+        triggerListeners();
     }
 
     @Override
@@ -165,6 +171,7 @@ public class ArticleRepositoryImpl extends BaseRepository<Article> implements Ar
 
             new AssetService().clearFolder();
 
+            triggerListeners();
             return;
         }
 
@@ -174,5 +181,20 @@ public class ArticleRepositoryImpl extends BaseRepository<Article> implements Ar
         );
 
         new AssetService().removeImage(ImagePath);
+
+        triggerListeners();
+    }
+
+
+    public void addListener(Runnable listener) {
+        listeners.add(listener);
+    }
+
+    public void triggerListeners() {
+        SwingUtilities.invokeLater(() -> {
+            for(Runnable listener : listeners) {
+                listener.run();
+            }
+        });
     }
 }

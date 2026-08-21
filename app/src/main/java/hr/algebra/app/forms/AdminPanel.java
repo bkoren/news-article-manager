@@ -26,8 +26,6 @@ public class AdminPanel extends JPanel {
     RssImportService importService;
 
     private final SourceRepositoryImpl   sourceRepository;
-    private final AuthorRepositoryImpl   authorRepository;
-    private final CategoryRepositoryImpl categoryRepository;
     private final ArticleRepositoryImpl  articleRepository;
 
     public AdminPanel(
@@ -37,8 +35,6 @@ public class AdminPanel extends JPanel {
             ArticleRepositoryImpl articleRepository
     ) {
         this.sourceRepository = sourceRepository;
-        this.authorRepository = authorRepository;
-        this.categoryRepository = categoryRepository;
         this.articleRepository = articleRepository;
 
         try {

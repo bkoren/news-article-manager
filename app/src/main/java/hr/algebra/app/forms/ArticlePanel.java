@@ -1,21 +1,12 @@
 package hr.algebra.app.forms;
 
 import hr.algebra.dao.models.Article;
-import hr.algebra.dao.models.Source;
 import hr.algebra.dao.repositories.article.ArticleRepositoryImpl;
-import hr.algebra.dao.repositories.author.AuthorRepositoryImpl;
-import hr.algebra.dao.repositories.category.CategoryRepositoryImpl;
-import hr.algebra.dao.repositories.source.SourceRepositoryImpl;
 
 import javax.swing.*;
 import javax.swing.table.*;
 import java.awt.*;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
 import java.sql.SQLException;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 public class ArticlePanel extends JPanel {
@@ -30,11 +21,17 @@ public class ArticlePanel extends JPanel {
 
     private List<Article> articleList;
 
-    private JTable articleTable;
     private DefaultTableModel tableModel;
+
+    private JTable articleData;
+    private JScrollPane articleDisplay;
+
+    private JLabel messageLabel;
 
     public ArticlePanel(ArticleRepositoryImpl articleRepository) {
         this.articleRepository = articleRepository;
+
+        articleRepository.addListener(this::fillTheList);
 
         setLayout(new BorderLayout());
 
@@ -44,42 +41,65 @@ public class ArticlePanel extends JPanel {
 
         add(topSection, BorderLayout.NORTH);
 
-        try {
-            articleList = articleRepository.read(0);
-        }
-        catch (SQLException exception) {
-            add(noContentMessage("A database error occurred. Please try again."), BorderLayout.CENTER);
-        }
-
-        if(!articleList.isEmpty()) {
-            add(buildTable(), BorderLayout.CENTER);
-        }
-        else {
-            add(noContentMessage("No available content."), BorderLayout.CENTER);
-        }
+        fillTheList();
     }
 
     private void fillTheList() {
         try {
             articleList = articleRepository.read(0);
+            refreshUi();
         }
         catch (SQLException exception) {
-            remove(articleTable);
+            if(articleDisplay != null) {
+                articleDisplay.setVisible(false);
+            }
+
             add(noContentMessage("A database error occurred. Please try again."), BorderLayout.CENTER);
         }
+    }
 
-        refreshTable();
+    private void refreshUi() {
+        if(articleList.isEmpty()) {
+            articleDisplay.setVisible(false);
+
+            add(noContentMessage("No available content."), BorderLayout.CENTER);
+            return;
+        }
+        else {
+            if(messageLabel != null) {
+                messageLabel.setVisible(false);
+            }
+
+            if(articleDisplay != null) {
+                articleDisplay.setVisible(true);
+            }
+        }
+
+        if(tableModel == null) {
+            articleDisplay = buildTable();
+            add(articleDisplay, BorderLayout.CENTER);
+        }
+
+        tableModel.setRowCount(0);
+
+        for (Article article : articleList) {
+            tableModel.addRow(new Object[] {
+                    article.getTitle(),
+                    article.getSource().getName(),
+                    article.getPublishedAt().toLocalDate()
+            });
+        }
     }
 
     private JLabel noContentMessage(String message) {
-        JLabel label = new JLabel(message);
+        messageLabel = new JLabel(message);
 
-        label.setFont(new Font("SansSerif", Font.BOLD, 48));
-        label.setForeground(Color.RED);
-        label.setHorizontalAlignment(SwingConstants.CENTER);
-        label.setVerticalAlignment(SwingConstants.CENTER);
+        messageLabel.setFont(new Font("SansSerif", Font.BOLD, 48));
+        messageLabel.setForeground(Color.RED);
+        messageLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        messageLabel.setVerticalAlignment(SwingConstants.CENTER);
 
-        return label;
+        return messageLabel;
     }
 
     private JScrollPane buildTable() {
@@ -92,32 +112,32 @@ public class ArticlePanel extends JPanel {
             }
         };
 
-        articleTable = new JTable(tableModel);
-        articleTable.setFillsViewportHeight(true);
-        articleTable.setAutoCreateRowSorter(false);
-        articleTable.setFont(articleTable.getFont().deriveFont(14f));
-        articleTable.setRowHeight(32);
-        articleTable.setRowMargin(4);
-        articleTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        articleTable.getTableHeader().setResizingAllowed(true);
+        articleData = new JTable(tableModel);
+        articleData.setFillsViewportHeight(true);
+        articleData.setAutoCreateRowSorter(false);
+        articleData.setFont(articleData.getFont().deriveFont(14f));
+        articleData.setRowHeight(32);
+        articleData.setRowMargin(4);
+        articleData.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        articleData.getTableHeader().setResizingAllowed(true);
 
         DefaultTableCellRenderer right = new DefaultTableCellRenderer();
         right.setHorizontalAlignment(SwingConstants.CENTER);
 
-        TableColumn column2 = articleTable.getColumnModel().getColumn(2);
+        TableColumn column2 = articleData.getColumnModel().getColumn(2);
         column2.setCellRenderer(right);
         column2.setPreferredWidth(125);
 
         DefaultTableCellRenderer center = new DefaultTableCellRenderer();
         center.setHorizontalAlignment(SwingConstants.CENTER);
 
-        TableColumn column1 = articleTable.getColumnModel().getColumn(1);
+        TableColumn column1 = articleData.getColumnModel().getColumn(1);
         column1.setCellRenderer(center);
         column1.setPreferredWidth(125);
 
-        articleTable.getColumnModel().getColumn(0).setPreferredWidth(375);
+        articleData.getColumnModel().getColumn(0).setPreferredWidth(375);
 
-        JTableHeader header = articleTable.getTableHeader();
+        JTableHeader header = articleData.getTableHeader();
         header.setReorderingAllowed(false);
         header.setResizingAllowed(true);
         header.setFocusable(false);
@@ -137,21 +157,7 @@ public class ArticlePanel extends JPanel {
             return c;
         });
 
-        refreshTable();
-
-        return new JScrollPane(articleTable);
-    }
-
-    private void refreshTable() {
-        tableModel.setRowCount(0);
-
-        for (Article article : articleList) {
-            tableModel.addRow(new Object[] {
-                    article.getTitle(),
-                    article.getSource().getName(),
-                    article.getPublishedAt().toLocalDate()
-            });
-        }
+        return new JScrollPane(articleData);
     }
 
     private JPanel buildBtnSection() {

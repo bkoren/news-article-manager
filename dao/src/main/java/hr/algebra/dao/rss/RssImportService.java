@@ -119,6 +119,8 @@ public class RssImportService {
             }
         }
 
+        articleRepository.triggerListeners();
+
         return sumOfImports;
     }
 
