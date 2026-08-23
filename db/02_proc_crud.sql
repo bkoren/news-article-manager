@@ -205,12 +205,16 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    SELECT 
-		[IDAuthor],
-		[Name]
-    FROM 
-		[dbo].[Author]
-		
+	SELECT
+		[a].[IDAuthor],
+		[a].[Name],
+		COUNT([aa].[ArticleID]) AS [ArticlesCount]
+	FROM
+		[dbo].[ArticleAuthor] AS aa
+	LEFT JOIN 
+		[dbo].[Author] AS a ON [aa].[AuthorID] = [a].[IDAuthor]
+	GROUP BY 
+		[a].[IDAuthor], [a].[Name]	
 END;
 GO
 
@@ -272,12 +276,15 @@ BEGIN
 	SET NOCOUNT ON;
 
 	SELECT
-		[IDCategory],
-		[Name]
+		[c].[IDCategory],
+		[c].[Name],
+		COUNT([cg].[ArticleID]) AS [ArticlesCount]
 	FROM 
-		[dbo].[Category]
-	ORDER BY
-		[Name];
+		[dbo].[ArticleCategory] AS cg
+	JOIN
+		[dbo].[Category] AS c ON [cg].[CategoryID] = [c].[IDCategory]
+	GROUP BY
+		[c].[IDCategory], [c].[Name]
 
 END;
 GO

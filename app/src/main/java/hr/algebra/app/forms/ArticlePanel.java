@@ -1,7 +1,9 @@
 package hr.algebra.app.forms;
 
+import hr.algebra.dao.exceptions.AssetException;
 import hr.algebra.dao.models.Article;
 import hr.algebra.dao.repositories.article.ArticleRepositoryImpl;
+import hr.algebra.utilities.gui.DialogUtils;
 
 import javax.swing.*;
 import javax.swing.table.*;
@@ -22,6 +24,7 @@ public class ArticlePanel extends JPanel {
     private List<Article> mainList;
 
     private DefaultTableModel tableModel;
+    private JTable articleData;
 
     private JScrollPane articleDisplayTable;
     private JLabel messageLabel;
@@ -43,11 +46,6 @@ public class ArticlePanel extends JPanel {
 
         addEvents();
 
-        if(tableModel == null) {
-            articleDisplayTable = buildTable();
-            add(articleDisplayTable, BorderLayout.CENTER);
-        }
-
         fillTheList();
     }
 
@@ -58,6 +56,25 @@ public class ArticlePanel extends JPanel {
             refreshUi();
             searchQuery = "";
             searchField.setText("");
+        });
+
+        deleteBtn.addActionListener(event -> {
+            try {
+                int articleId = (Integer) tableModel.getValueAt(articleData.getSelectedRow(), 0);
+
+                if(DialogUtils.confirm(this, "Are you sure you want to delete this article?")) {
+                    articleRepository.delete(articleId);
+                }
+            }
+            catch (SQLException exception) {
+                DialogUtils.showError(this, "A database error occurred. Please try again.");
+            }
+            catch (AssetException exception) {
+                DialogUtils.showError(this, "Failed to delete the image of the article!");
+            }
+            catch (ArrayIndexOutOfBoundsException exception) {
+                DialogUtils.showError(this, "No article selected. Please select an article.");
+            }
         });
     }
 
@@ -88,6 +105,11 @@ public class ArticlePanel extends JPanel {
                 : mainList.stream()
                     .filter(a -> a.getTitle().toLowerCase().contains(searchQuery))
                     .toList();
+
+        if(tableModel == null) {
+            articleDisplayTable = buildTable();
+            add(articleDisplayTable, BorderLayout.CENTER);
+        }
 
         if(filteredList.isEmpty()) {
             if(articleDisplayTable != null) {
@@ -120,6 +142,7 @@ public class ArticlePanel extends JPanel {
 
         for (Article article : filteredList) {
             tableModel.addRow(new Object[] {
+                    article.getArticleId(),
                     article.getTitle(),
                     article.getSource().getName(),
                     article.getPublishedAt().toLocalDate()
@@ -139,7 +162,7 @@ public class ArticlePanel extends JPanel {
     }
 
     private JScrollPane buildTable() {
-        String[] columnNames = { "Title", "Source", "Published At" };
+        String[] columnNames = { "Id", "Title", "Source", "Published At" };
 
         tableModel = new DefaultTableModel(columnNames, 0) {
             @Override
@@ -148,7 +171,7 @@ public class ArticlePanel extends JPanel {
             }
         };
 
-        JTable articleData = new JTable(tableModel);
+        articleData = new JTable(tableModel);
         articleData.setFillsViewportHeight(true);
         articleData.setAutoCreateRowSorter(false);
         articleData.setFont(articleData.getFont().deriveFont(14f));
@@ -156,6 +179,7 @@ public class ArticlePanel extends JPanel {
         articleData.setRowMargin(4);
         articleData.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         articleData.getTableHeader().setResizingAllowed(true);
+        articleData.removeColumn(articleData.getColumnModel().getColumn(0));
 
         DefaultTableCellRenderer right = new DefaultTableCellRenderer();
         right.setHorizontalAlignment(SwingConstants.CENTER);
