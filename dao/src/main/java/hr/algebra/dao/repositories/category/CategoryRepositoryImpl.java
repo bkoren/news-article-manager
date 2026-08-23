@@ -19,7 +19,7 @@ public class CategoryRepositoryImpl extends BaseRepository<Category> implements 
         return new Category(
                 databaseResult.getInt("IDCategory"),
                 databaseResult.getString("Name"),
-                (hasColumn(databaseResult, "ArticlesCount") ?
+                (hasColumn(databaseResult) ?
                         databaseResult.getInt("ArticlesCount") : 0
                 )
         );
@@ -44,10 +44,14 @@ public class CategoryRepositoryImpl extends BaseRepository<Category> implements 
             return -1;
         }
 
-        return executeInsert(
+        int id = executeInsert(
                 "{call p_Category_Create(?)}",
                 statement -> statement.setString(1, category.getName())
         );
+
+        triggerListeners();
+
+        return id;
     }
 
     @Override
@@ -74,11 +78,11 @@ public class CategoryRepositoryImpl extends BaseRepository<Category> implements 
     }
 
 
-    private boolean hasColumn(ResultSet databaseResult, String column) throws SQLException {
+    private boolean hasColumn(ResultSet databaseResult) throws SQLException {
         ResultSetMetaData table = databaseResult.getMetaData();
 
         for(int i = 1; i <= table.getColumnCount(); i++) {
-            if(column.equalsIgnoreCase(table.getColumnLabel(i))) {
+            if("ArticlesCount".equalsIgnoreCase(table.getColumnLabel(i))) {
                 return true;
             }
         }

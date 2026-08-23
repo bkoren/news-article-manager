@@ -44,10 +44,14 @@ public class AuthorRepositoryImpl extends BaseRepository<Author> implements Auth
             return -1;
         }
 
-        return executeInsert(
+        int id = executeInsert(
                  "{call p_Author_Create(?)}",
                  statement -> statement.setString(1, author.getName())
         );
+
+        triggerListeners();
+
+        return id;
     }
 
     @Override

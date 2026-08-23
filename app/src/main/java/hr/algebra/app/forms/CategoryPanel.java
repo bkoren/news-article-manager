@@ -1,7 +1,10 @@
 package hr.algebra.app.forms;
 
+import hr.algebra.dao.exceptions.AssetException;
+import hr.algebra.dao.models.Author;
 import hr.algebra.dao.models.Category;
 import hr.algebra.dao.repositories.category.CategoryRepositoryImpl;
+import hr.algebra.utilities.gui.DialogUtils;
 
 import javax.swing.*;
 import javax.swing.table.*;
@@ -20,6 +23,7 @@ public class CategoryPanel extends JPanel {
 
     private JScrollPane categoryDisplayTable;
     private DefaultTableModel tableModel;
+    private JTable categoryData;
 
     private JLabel messageLabel;
     private String searchQuery = "";
@@ -54,6 +58,109 @@ public class CategoryPanel extends JPanel {
             searchQuery = "";
             searchField.setText("");
         });
+
+        deleteBtn.addActionListener(event -> {
+            try {
+                if(DialogUtils.confirm(this, "Are you sure you want to delete " +
+                        tableModel.getValueAt(categoryData.getSelectedRow(), 1) + "?")) {
+
+                    categoryRepository.delete((Integer) tableModel.getValueAt(categoryData.getSelectedRow(), 0));
+                }
+            }
+            catch (SQLException exception) {
+                DialogUtils.showError(this, "A database error occurred. Please try again.");
+            }
+            catch (ArrayIndexOutOfBoundsException exception) {
+                DialogUtils.showError(this, "No category selected. Please select category.");
+            }
+        });
+
+        newBtn.addActionListener((event -> {
+            JDialog newArticleDialog = new JDialog(SwingUtilities.getWindowAncestor(this), "Insert new category");
+            newArticleDialog.setModalityType(Dialog.ModalityType.APPLICATION_MODAL);
+            newArticleDialog.setLayout(new FlowLayout());
+
+            JPanel inputSection = new JPanel();
+            JTextField inputField = new JTextField(20);
+            JButton confirmBtn = new JButton("Insert");
+
+            inputSection.add(inputField);
+            inputSection.add(confirmBtn);
+            newArticleDialog.add(inputSection);
+
+            confirmBtn.addActionListener((e -> {
+                String inputData = inputField.getText();
+
+                if(inputData.isEmpty()) {
+                    return;
+                }
+
+                if (inputData.length() < 3) {
+                    DialogUtils.showError(this, "Name needs to contain at least three characters. ");
+                    return;
+                }
+
+                try {
+                    categoryRepository.create(new Category(0, inputData));
+                }
+                catch (SQLException ex) {
+                    DialogUtils.showError(this, "A database error occurred. Please try again.");
+                }
+            }));
+
+            newArticleDialog.setMinimumSize(new Dimension(400, 100));
+            newArticleDialog.setLocationRelativeTo(this);
+            newArticleDialog.setVisible(true);
+        }));
+
+        editBtn.addActionListener((event -> {
+            try {
+                int id = (Integer) tableModel.getValueAt(categoryData.getSelectedRow(), 0);
+            }
+            catch (ArrayIndexOutOfBoundsException exception) {
+                DialogUtils.showError(this, "No category selected. Please select category.");
+                return;
+            }
+
+            JDialog newArticleDialog = new JDialog(SwingUtilities.getWindowAncestor(this), "Edit category");
+            newArticleDialog.setModalityType(Dialog.ModalityType.APPLICATION_MODAL);
+            newArticleDialog.setLayout(new FlowLayout());
+
+            JPanel inputSection = new JPanel();
+            JTextField inputField = new JTextField(20);
+            JButton confirmBtn = new JButton("Submit");
+
+            inputSection.add(inputField);
+            inputSection.add(confirmBtn);
+            newArticleDialog.add(inputSection);
+
+            confirmBtn.addActionListener((e -> {
+                String inputData = inputField.getText();
+
+                if(inputData.isEmpty()) {
+                    return;
+                }
+
+                if (inputData.length() < 3) {
+                    DialogUtils.showError(this, "Name needs to contain at least three characters. ");
+                    return;
+                }
+
+                try {
+                    categoryRepository.update(new Category(
+                            (Integer) tableModel.getValueAt(categoryData.getSelectedRow(), 0), inputData));
+
+                    newArticleDialog.dispose();
+                }
+                catch (SQLException ex) {
+                    DialogUtils.showError(this, "A database error occurred. Please try again.");
+                }
+            }));
+
+            newArticleDialog.setMinimumSize(new Dimension(400, 100));
+            newArticleDialog.setLocationRelativeTo(this);
+            newArticleDialog.setVisible(true);
+        }));
     }
 
     private void fillTheList() {
@@ -118,6 +225,7 @@ public class CategoryPanel extends JPanel {
 
         for (Category category : filteredList) {
             tableModel.addRow(new Object[] {
+                    category.getCategoryId(),
                     category.getName(),
                     category.getArticlesCount()
             });
@@ -136,7 +244,7 @@ public class CategoryPanel extends JPanel {
     }
 
     private JScrollPane buildTable() {
-        String[] columnNames = { "Name", "Articles" };
+        String[] columnNames = { "Id", "Name", "Articles" };
 
         tableModel = new DefaultTableModel(columnNames, 0) {
             @Override
@@ -145,13 +253,14 @@ public class CategoryPanel extends JPanel {
             }
         };
 
-        JTable categoryData = new JTable(tableModel);
+        categoryData = new JTable(tableModel);
         categoryData.setFillsViewportHeight(true);
         categoryData.setAutoCreateRowSorter(false);
         categoryData.setFont(categoryData.getFont().deriveFont(14f));
         categoryData.setRowHeight(32);
         categoryData.setRowMargin(4);
         categoryData.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        categoryData.removeColumn(categoryData.getColumnModel().getColumn(0));
 
         DefaultTableCellRenderer center = new DefaultTableCellRenderer();
         center.setHorizontalAlignment(SwingConstants.CENTER);

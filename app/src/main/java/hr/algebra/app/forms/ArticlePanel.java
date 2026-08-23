@@ -44,9 +44,9 @@ public class ArticlePanel extends JPanel {
 
         add(topSection, BorderLayout.NORTH);
 
-        addEvents();
-
         fillTheList();
+
+        addEvents();
     }
 
     private void addEvents() {
@@ -60,10 +60,10 @@ public class ArticlePanel extends JPanel {
 
         deleteBtn.addActionListener(event -> {
             try {
-                int articleId = (Integer) tableModel.getValueAt(articleData.getSelectedRow(), 0);
+                if(DialogUtils.confirm(this, "Are you sure you want to delete " +
+                        tableModel.getValueAt(articleData.getSelectedRow(), 1) + "?")) {
 
-                if(DialogUtils.confirm(this, "Are you sure you want to delete this article?")) {
-                    articleRepository.delete(articleId);
+                    articleRepository.delete((Integer) tableModel.getValueAt(articleData.getSelectedRow(), 0));
                 }
             }
             catch (SQLException exception) {

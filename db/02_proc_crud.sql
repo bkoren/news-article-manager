@@ -211,7 +211,7 @@ BEGIN
 		COUNT([aa].[ArticleID]) AS [ArticlesCount]
 	FROM
 		[dbo].[ArticleAuthor] AS aa
-	LEFT JOIN 
+	RIGHT JOIN 
 		[dbo].[Author] AS a ON [aa].[AuthorID] = [a].[IDAuthor]
 	GROUP BY 
 		[a].[IDAuthor], [a].[Name]	
@@ -281,7 +281,7 @@ BEGIN
 		COUNT([cg].[ArticleID]) AS [ArticlesCount]
 	FROM 
 		[dbo].[ArticleCategory] AS cg
-	JOIN
+	RIGHT JOIN
 		[dbo].[Category] AS c ON [cg].[CategoryID] = [c].[IDCategory]
 	GROUP BY
 		[c].[IDCategory], [c].[Name]

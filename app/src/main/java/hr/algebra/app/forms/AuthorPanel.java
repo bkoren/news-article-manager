@@ -2,6 +2,7 @@ package hr.algebra.app.forms;
 
 import hr.algebra.dao.models.Author;
 import hr.algebra.dao.repositories.author.AuthorRepositoryImpl;
+import hr.algebra.utilities.gui.DialogUtils;
 
 import javax.swing.*;
 import javax.swing.table.*;
@@ -19,6 +20,7 @@ public class AuthorPanel extends JPanel {
     private JButton deleteBtn;
 
     private DefaultTableModel tableModel;
+    private JTable authorData;
 
     private JScrollPane authorDisplayTable;
     private JLabel messageLabel;
@@ -54,6 +56,109 @@ public class AuthorPanel extends JPanel {
             searchQuery = "";
             searchField.setText("");
         });
+
+        deleteBtn.addActionListener(event -> {
+            try {
+                if(DialogUtils.confirm(this, "Are you sure you want to delete " +
+                        tableModel.getValueAt(authorData.getSelectedRow(), 1) + "?")) {
+
+                    authorRepository.delete((Integer) tableModel.getValueAt(authorData.getSelectedRow(), 0));
+                }
+            }
+            catch (SQLException exception) {
+                DialogUtils.showError(this, "A database error occurred. Please try again.");
+            }
+            catch (ArrayIndexOutOfBoundsException exception) {
+                DialogUtils.showError(this, "No author selected. Please select an author.");
+            }
+        });
+
+        newBtn.addActionListener((event -> {
+            JDialog newArticleDialog = new JDialog(SwingUtilities.getWindowAncestor(this), "Insert new author");
+            newArticleDialog.setModalityType(Dialog.ModalityType.APPLICATION_MODAL);
+            newArticleDialog.setLayout(new FlowLayout());
+
+            JPanel inputSection = new JPanel();
+            JTextField inputField = new JTextField(20);
+            JButton confirmBtn = new JButton("Insert");
+
+            inputSection.add(inputField);
+            inputSection.add(confirmBtn);
+            newArticleDialog.add(inputSection);
+
+            confirmBtn.addActionListener((e -> {
+                String inputData = inputField.getText();
+
+                if(inputData.isEmpty()) {
+                    return;
+                }
+
+                if (inputData.length() < 3) {
+                    DialogUtils.showError(this, "Name needs to contain at least three characters. ");
+                    return;
+                }
+
+                try {
+                    authorRepository.create(new Author(0, inputData));
+                }
+                catch (SQLException ex) {
+                    DialogUtils.showError(this, "A database error occurred. Please try again.");
+                }
+            }));
+
+            newArticleDialog.setMinimumSize(new Dimension(400, 100));
+            newArticleDialog.setLocationRelativeTo(this);
+            newArticleDialog.setVisible(true);
+        }));
+
+        editBtn.addActionListener((event -> {
+            try {
+                int id = (Integer) tableModel.getValueAt(authorData.getSelectedRow(), 0);
+            }
+            catch (ArrayIndexOutOfBoundsException exception) {
+                DialogUtils.showError(this, "No author selected. Please select an author.");
+                return;
+            }
+
+            JDialog newArticleDialog = new JDialog(SwingUtilities.getWindowAncestor(this), "Edit author");
+            newArticleDialog.setModalityType(Dialog.ModalityType.APPLICATION_MODAL);
+            newArticleDialog.setLayout(new FlowLayout());
+
+            JPanel inputSection = new JPanel();
+            JTextField inputField = new JTextField(20);
+            JButton confirmBtn = new JButton("Submit");
+
+            inputSection.add(inputField);
+            inputSection.add(confirmBtn);
+            newArticleDialog.add(inputSection);
+
+            confirmBtn.addActionListener((e -> {
+                String inputData = inputField.getText();
+
+                if(inputData.isEmpty()) {
+                    return;
+                }
+
+                if (inputData.length() < 3) {
+                    DialogUtils.showError(this, "Name needs to contain at least three characters. ");
+                    return;
+                }
+
+                try {
+                    authorRepository.update(new Author(
+                            (Integer) tableModel.getValueAt(authorData.getSelectedRow(), 0), inputData));
+
+                    newArticleDialog.dispose();
+                }
+                catch (SQLException ex) {
+                    DialogUtils.showError(this, "A database error occurred. Please try again.");
+                }
+            }));
+
+            newArticleDialog.setMinimumSize(new Dimension(400, 100));
+            newArticleDialog.setLocationRelativeTo(this);
+            newArticleDialog.setVisible(true);
+        }));
     }
 
     private void fillTheList() {
@@ -117,6 +222,7 @@ public class AuthorPanel extends JPanel {
         tableModel.setRowCount(0);
         for (Author author : filteredList) {
             tableModel.addRow(new Object[] {
+                    author.getAuthorId(),
                     author.getName(),
                     author.getArticlesCount()
             });
@@ -135,7 +241,7 @@ public class AuthorPanel extends JPanel {
     }
 
     private JScrollPane buildTable() {
-        String[] columnNames = { "Name", "Articles" };
+        String[] columnNames = { "Id", "Name", "Articles" };
 
         tableModel = new DefaultTableModel(columnNames, 0) {
             @Override
@@ -144,25 +250,26 @@ public class AuthorPanel extends JPanel {
             }
         };
 
-        JTable authorTable = new JTable(tableModel);
-        authorTable.setFillsViewportHeight(true);
-        authorTable.setAutoCreateRowSorter(false);
-        authorTable.setFont(authorTable.getFont().deriveFont(14f));
-        authorTable.setRowHeight(32);
-        authorTable.setRowMargin(4);
-        authorTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        authorData = new JTable(tableModel);
+        authorData.setFillsViewportHeight(true);
+        authorData.setAutoCreateRowSorter(false);
+        authorData.setFont(authorData.getFont().deriveFont(14f));
+        authorData.setRowHeight(32);
+        authorData.setRowMargin(4);
+        authorData.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        authorData.removeColumn(authorData.getColumnModel().getColumn(0));
 
         DefaultTableCellRenderer center = new DefaultTableCellRenderer();
         center.setHorizontalAlignment(SwingConstants.CENTER);
 
-        TableColumn column = authorTable.getColumnModel().getColumn(1);
+        TableColumn column = authorData.getColumnModel().getColumn(1);
         column.setMinWidth(100);
         column.setMaxWidth(100);
         column.setPreferredWidth(100);
         column.setResizable(false);
         column.setCellRenderer(center);
 
-        JTableHeader header = authorTable.getTableHeader();
+        JTableHeader header = authorData.getTableHeader();
         header.setReorderingAllowed(false);
         header.setResizingAllowed(false);
         header.setFocusable(false);
@@ -192,7 +299,7 @@ public class AuthorPanel extends JPanel {
 
         refreshUi();
 
-        return new JScrollPane(authorTable);
+        return new JScrollPane(authorData);
     }
 
     private JPanel buildBtnSection() {
