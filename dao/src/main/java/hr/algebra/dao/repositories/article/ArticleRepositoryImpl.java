@@ -12,6 +12,7 @@ import hr.algebra.dao.rss.AssetService;
 
 import javax.swing.*;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;

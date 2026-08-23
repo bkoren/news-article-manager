@@ -5,10 +5,17 @@ import java.util.Objects;
 public class Category {
     private final int categoryId;
     private String name;
+    private int articlesCount;
 
     public Category(int categoryId, String name) {
         this.categoryId = categoryId;
         this.name = name;
+    }
+
+    public Category(int categoryId, String name, int articlesCount) {
+        this.categoryId = categoryId;
+        this.name = name;
+        this.articlesCount = articlesCount;
     }
 
     public int getCategoryId() {
@@ -45,5 +52,9 @@ public class Category {
                 "categoryId=" + categoryId +
                 ", name='" + name + '\'' +
                 '}';
+    }
+
+    public int getArticlesCount() {
+        return articlesCount;
     }
 }

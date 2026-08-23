@@ -12,6 +12,7 @@ import hr.algebra.dao.rss.RssSource;
 
 import javax.swing.*;
 import java.awt.*;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Objects;
 
@@ -78,12 +79,11 @@ public class AdminDeleteWorker extends SwingWorker<Integer, String> {
             if(source != null) {
                 int sourceId = sourceRepository.delete(source.getName());
 
-                if(sourceId != -1) {
-                    List<Article> articles = articleRepository.read(sourceId);
-                    for (Article article : articles) {
-                        articleRepository.delete(article.getArticleId());
-                    }
+                if(sourceId != 0) {
+                    throw new SQLException("Source not found!");
                 }
+
+                articleRepository.triggerListeners();
             }
             else {
                 articleRepository.delete(0);
@@ -109,5 +109,4 @@ public class AdminDeleteWorker extends SwingWorker<Integer, String> {
 
         return 0;
     }
-
 }

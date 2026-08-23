@@ -4,10 +4,7 @@ import hr.algebra.dao.models.Category;
 import hr.algebra.dao.repositories.category.CategoryRepositoryImpl;
 
 import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.JTableHeader;
-import javax.swing.table.TableCellRenderer;
-import javax.swing.table.TableColumn;
+import javax.swing.table.*;
 import java.awt.*;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
@@ -22,10 +19,12 @@ public class CategoryPanel extends JPanel {
     private JButton deleteBtn;
 
     private JScrollPane categoryDisplayTable;
-    private JLabel messageLabel;
-
     private DefaultTableModel tableModel;
-    private List<Category> categoryList;
+
+    private JLabel messageLabel;
+    private String searchQuery = "";
+
+    private List<Category> mainList;
 
     private final CategoryRepositoryImpl categoryRepository;
 
@@ -42,34 +41,67 @@ public class CategoryPanel extends JPanel {
 
         add(topSection, BorderLayout.NORTH);
 
+        addEvents();
+
         fillTheList();
+    }
+
+    private void addEvents() {
+        searchBtn.addActionListener(event -> {
+            searchQuery = searchField.getText().trim().toLowerCase();
+
+            refreshUi();
+            searchQuery = "";
+            searchField.setText("");
+        });
     }
 
     private void fillTheList() {
         try {
-            categoryList = categoryRepository.read();
+            mainList = categoryRepository.read();
             refreshUi();
         }
         catch (SQLException exception) {
             if(categoryDisplayTable != null) {
                 categoryDisplayTable.setVisible(false);
             }
-            add(noContentMessage("A database error occurred. Please try again."), BorderLayout.CENTER);
+            if(messageLabel != null) {
+                remove(messageLabel);
+            }
+            messageLabel = setMainMessage("A database error occurred. Please try again.");
+            add(messageLabel, BorderLayout.CENTER);
+
+            this.revalidate();
+            this.repaint();
         }
     }
 
     private void refreshUi() {
-        if(categoryList.isEmpty()) {
+        List<Category> filteredList = searchQuery.isEmpty()
+                ? List.copyOf(mainList)
+                : mainList.stream()
+                  .filter(c -> c.getName().toLowerCase().contains(searchQuery))
+                  .toList();
+
+        if(filteredList.isEmpty()) {
             if(categoryDisplayTable != null) {
                 categoryDisplayTable.setVisible(false);
             }
 
-            add(noContentMessage("No available content."), BorderLayout.CENTER);
+            if(messageLabel != null) {
+                remove(messageLabel);
+            }
+            messageLabel = setMainMessage("No available content.");
+            add(messageLabel, BorderLayout.CENTER);
+
+            this.revalidate();
+            this.repaint();
+
             return;
         }
         else {
             if(messageLabel != null) {
-                messageLabel.setVisible(false);
+                remove(messageLabel);
             }
 
             if(categoryDisplayTable != null) {
@@ -84,14 +116,15 @@ public class CategoryPanel extends JPanel {
 
         tableModel.setRowCount(0);
 
-        for (Category category : categoryList) {
+        for (Category category : filteredList) {
             tableModel.addRow(new Object[] {
                     category.getName(),
+                    category.getArticlesCount()
             });
         }
     }
 
-    private JLabel noContentMessage(String message) {
+    private JLabel setMainMessage(String message) {
         messageLabel = new JLabel(message);
 
         messageLabel.setFont(new Font("SansSerif", Font.BOLD, 48));
@@ -120,11 +153,15 @@ public class CategoryPanel extends JPanel {
         categoryData.setRowMargin(4);
         categoryData.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
+        DefaultTableCellRenderer center = new DefaultTableCellRenderer();
+        center.setHorizontalAlignment(SwingConstants.CENTER);
+
         TableColumn column = categoryData.getColumnModel().getColumn(1);
         column.setMinWidth(100);
         column.setMaxWidth(100);
         column.setPreferredWidth(100);
         column.setResizable(false);
+        column.setCellRenderer(center);
 
         JTableHeader header = categoryData.getTableHeader();
         header.setReorderingAllowed(false);

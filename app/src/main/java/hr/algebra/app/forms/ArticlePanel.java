@@ -19,12 +19,14 @@ public class ArticlePanel extends JPanel {
 
     private final ArticleRepositoryImpl articleRepository;
 
-    private List<Article> articleList;
+    private List<Article> mainList;
 
     private DefaultTableModel tableModel;
 
     private JScrollPane articleDisplayTable;
     private JLabel messageLabel;
+
+    private String searchQuery = "";
 
     public ArticlePanel(ArticleRepositoryImpl articleRepository) {
         this.articleRepository = articleRepository;
@@ -39,12 +41,29 @@ public class ArticlePanel extends JPanel {
 
         add(topSection, BorderLayout.NORTH);
 
+        addEvents();
+
+        if(tableModel == null) {
+            articleDisplayTable = buildTable();
+            add(articleDisplayTable, BorderLayout.CENTER);
+        }
+
         fillTheList();
+    }
+
+    private void addEvents() {
+        searchBtn.addActionListener(event -> {
+            searchQuery = searchField.getText().trim().toLowerCase();
+
+            refreshUi();
+            searchQuery = "";
+            searchField.setText("");
+        });
     }
 
     private void fillTheList() {
         try {
-            articleList = articleRepository.read(0);
+            mainList = articleRepository.read(0);
             refreshUi();
         }
         catch (SQLException exception) {
@@ -52,22 +71,44 @@ public class ArticlePanel extends JPanel {
                 articleDisplayTable.setVisible(false);
             }
 
-            add(noContentMessage("A database error occurred. Please try again."), BorderLayout.CENTER);
+            if(messageLabel != null) {
+                remove(messageLabel);
+            }
+            messageLabel = setMainMessageText("A database error occurred. Please try again.");
+            add(messageLabel, BorderLayout.CENTER);
+
+            this.revalidate();
+            this.repaint();
         }
     }
 
     private void refreshUi() {
-        if(articleList.isEmpty()) {
+        List<Article> filteredList = searchQuery.isEmpty()
+                ? List.copyOf(mainList)
+                : mainList.stream()
+                    .filter(a -> a.getTitle().toLowerCase().contains(searchQuery))
+                    .toList();
+
+        if(filteredList.isEmpty()) {
             if(articleDisplayTable != null) {
                 articleDisplayTable.setVisible(false);
             }
 
-            add(noContentMessage("No available content."), BorderLayout.CENTER);
+            if(messageLabel != null) {
+                remove(messageLabel);
+            }
+
+            messageLabel = setMainMessageText("No available content.");
+            add(messageLabel, BorderLayout.CENTER);
+
+            this.revalidate();
+            this.repaint();
+
             return;
         }
         else {
             if(messageLabel != null) {
-                messageLabel.setVisible(false);
+                remove(messageLabel);
             }
 
             if(articleDisplayTable != null) {
@@ -75,14 +116,9 @@ public class ArticlePanel extends JPanel {
             }
         }
 
-        if(tableModel == null) {
-            articleDisplayTable = buildTable();
-            add(articleDisplayTable, BorderLayout.CENTER);
-        }
-
         tableModel.setRowCount(0);
 
-        for (Article article : articleList) {
+        for (Article article : filteredList) {
             tableModel.addRow(new Object[] {
                     article.getTitle(),
                     article.getSource().getName(),
@@ -91,7 +127,7 @@ public class ArticlePanel extends JPanel {
         }
     }
 
-    private JLabel noContentMessage(String message) {
+    private JLabel setMainMessageText(String message) {
         messageLabel = new JLabel(message);
 
         messageLabel.setFont(new Font("SansSerif", Font.BOLD, 48));

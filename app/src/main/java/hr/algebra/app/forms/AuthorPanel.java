@@ -19,12 +19,14 @@ public class AuthorPanel extends JPanel {
     private JButton deleteBtn;
 
     private DefaultTableModel tableModel;
+
     private JScrollPane authorDisplayTable;
     private JLabel messageLabel;
+    private String searchQuery = "";
 
     private final AuthorRepositoryImpl authorRepository;
 
-    private List<Author> authorList;
+    private List<Author> mainList;
 
     public AuthorPanel(AuthorRepositoryImpl authorRepository) {
         this.authorRepository = authorRepository;
@@ -39,33 +41,67 @@ public class AuthorPanel extends JPanel {
 
         add(topSection, BorderLayout.NORTH);
 
+        addEvents();
+
         fillTheList();
+    }
+
+    private void addEvents() {
+        searchBtn.addActionListener(event -> {
+            searchQuery = searchField.getText().trim().toLowerCase();
+
+            refreshUi();
+            searchQuery = "";
+            searchField.setText("");
+        });
     }
 
     private void fillTheList() {
         try {
-            authorList = authorRepository.read();
+            mainList = authorRepository.read();
             refreshUi();
         }
         catch (SQLException exception) {
             if(authorDisplayTable != null) {
                 authorDisplayTable.setVisible(false);
             }
-            add(noContentMessage("A database error occurred. Please try again."), BorderLayout.CENTER);
+            if(messageLabel != null) {
+                remove(messageLabel);
+            }
+            messageLabel = setMainMessage("A database error occurred. Please try again.");
+            add(messageLabel, BorderLayout.CENTER);
+
+            this.revalidate();
+            this.repaint();
         }
     }
 
     private void refreshUi() {
-        if(authorList.isEmpty()) {
+        List<Author> filteredList = searchQuery.isEmpty()
+                ? List.copyOf(mainList)
+                : mainList.stream()
+                    .filter(a -> a.getName().toLowerCase().contains(searchQuery))
+                    .toList();
+
+        if(filteredList.isEmpty()) {
             if(authorDisplayTable != null) {
                 authorDisplayTable.setVisible(false);
             }
-            add(noContentMessage("No available content."), BorderLayout.CENTER);
+
+            if(messageLabel != null) {
+                remove(messageLabel);
+            }
+            messageLabel = setMainMessage("No available content.");
+            add(messageLabel, BorderLayout.CENTER);
+
+            this.revalidate();
+            this.repaint();
+
             return;
         }
         else {
             if(messageLabel != null) {
-                messageLabel.setVisible(false);
+                remove(messageLabel);
             }
 
             if(authorDisplayTable != null) {
@@ -79,14 +115,15 @@ public class AuthorPanel extends JPanel {
         }
 
         tableModel.setRowCount(0);
-        for (Author author : authorList) {
+        for (Author author : filteredList) {
             tableModel.addRow(new Object[] {
                     author.getName(),
+                    author.getArticlesCount()
             });
         }
     }
 
-    private JLabel noContentMessage(String message) {
+    private JLabel setMainMessage(String message) {
         messageLabel = new JLabel(message);
 
         messageLabel.setFont(new Font("SansSerif", Font.BOLD, 48));
@@ -115,11 +152,15 @@ public class AuthorPanel extends JPanel {
         authorTable.setRowMargin(4);
         authorTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
+        DefaultTableCellRenderer center = new DefaultTableCellRenderer();
+        center.setHorizontalAlignment(SwingConstants.CENTER);
+
         TableColumn column = authorTable.getColumnModel().getColumn(1);
         column.setMinWidth(100);
         column.setMaxWidth(100);
         column.setPreferredWidth(100);
         column.setResizable(false);
+        column.setCellRenderer(center);
 
         JTableHeader header = authorTable.getTableHeader();
         header.setReorderingAllowed(false);

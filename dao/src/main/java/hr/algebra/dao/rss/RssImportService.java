@@ -50,11 +50,12 @@ public class RssImportService {
     }
 
     public int importFromAll() throws SQLException, ParserConfigurationException, IOException, SAXException {
+        int sumOfDownloadedArticles = 0;
         for(RssSource source : allSources) {
-            importFrom(source);
+            sumOfDownloadedArticles += importFrom(source);
         }
 
-        return allSources.length;
+        return sumOfDownloadedArticles;
     }
 
     public int importFrom(RssSource source) throws ParserConfigurationException, IOException, SAXException, SQLException {
@@ -98,7 +99,10 @@ public class RssImportService {
             for (Author author : parsedItem.authors()) {
                 int authorId = authorRepository.create(author);
                 if(authorId != -1) {
-                    linkedAuthors.add(new Author(authorId, author.getName()));
+                    linkedAuthors.add(new Author(
+                            authorId,
+                            author.getName()
+                    ));
                 }
             }
             article.addAuthors(linkedAuthors);

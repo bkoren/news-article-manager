@@ -5,14 +5,24 @@ import java.util.Objects;
 public class Author {
     private final int authorId;
     private String name;
+    private int articlesCount;
 
     public Author(int authorId, String name) {
         this.authorId = authorId;
         this.name = name;
     }
+    public Author(int authorId, String name, int articlesCount) {
+        this.authorId = authorId;
+        this.name = name;
+        this.articlesCount = articlesCount;
+    }
 
     public int getAuthorId() {
         return authorId;
+    }
+
+    public int getArticlesCount() {
+        return articlesCount;
     }
 
     public String getName() {
