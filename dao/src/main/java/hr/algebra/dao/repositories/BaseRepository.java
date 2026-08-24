@@ -1,11 +1,14 @@
 package hr.algebra.dao.repositories;
 
+import javax.swing.*;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 @SuppressWarnings({"SqlSourceToSinkFlow", "SameParameterValue"})
 public abstract class BaseRepository<T> {
+    protected List<Runnable> listeners;
+
     protected abstract T map(ResultSet databaseResult) throws SQLException;
 
     protected List<T> executeRead(String call) throws SQLException {
@@ -100,7 +103,7 @@ public abstract class BaseRepository<T> {
     }
 
 
-    private boolean hasColumn(ResultSet databaseResult, String column) throws SQLException {
+    protected boolean hasColumn(ResultSet databaseResult, String column) throws SQLException {
         ResultSetMetaData table = databaseResult.getMetaData();
 
         for(int i = 1; i <= table.getColumnCount(); i++) {
@@ -110,5 +113,23 @@ public abstract class BaseRepository<T> {
         }
 
         return false;
+    }
+
+
+    public void addListener(Runnable listener) {
+        listeners.add(listener);
+    }
+
+    public void removeListener(Runnable listener) {
+        listeners.remove(listener);
+    }
+
+    public void triggerListeners() {
+        SwingUtilities.invokeLater(() -> {
+            for(Runnable listener : listeners) {
+                System.out.println(listener);
+                listener.run();
+            }
+        });
     }
 }

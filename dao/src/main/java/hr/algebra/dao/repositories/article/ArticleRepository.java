@@ -6,6 +6,7 @@ import hr.algebra.dao.models.Source;
 
 import java.sql.SQLException;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public interface ArticleRepository {
     List<Article> read(int sourceId) throws SQLException;

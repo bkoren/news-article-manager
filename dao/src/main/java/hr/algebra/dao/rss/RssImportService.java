@@ -25,17 +25,17 @@ public class RssImportService {
     private final RssItemMapper mapper;
     private final AssetService asset;
 
+    AuthorRepository         authorRepository;
+    CategoryRepository       categoryRepository;
     SourceRepositoryImpl     sourceRepository;
-    AuthorRepositoryImpl         authorRepository;
-    CategoryRepositoryImpl       categoryRepository;
     ArticleRepositoryImpl    articleRepository;
 
     private final RssSource[] allSources;
 
     public RssImportService(
-            SourceRepositoryImpl sourceRepository,
-            AuthorRepositoryImpl authorRepository,
-            CategoryRepositoryImpl categoryRepository,
+            AuthorRepository      authorRepository,
+            CategoryRepository    categoryRepository,
+            SourceRepositoryImpl  sourceRepository,
             ArticleRepositoryImpl articleRepository
     ) throws AssetException {
         mapper = new RssItemMapper();
@@ -122,10 +122,6 @@ public class RssImportService {
                 sumOfImports++;
             }
         }
-
-        articleRepository.triggerListeners();
-        authorRepository.triggerListeners();
-        categoryRepository.triggerListeners();
 
         return sumOfImports;
     }

@@ -12,14 +12,16 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 public class CategoryRepositoryImpl extends BaseRepository<Category> implements CategoryRepository {
 
-    private final List<Runnable> listeners = new CopyOnWriteArrayList<>();
+    public CategoryRepositoryImpl() {
+        listeners = new CopyOnWriteArrayList<>();
+    }
 
     @Override
     protected Category map(ResultSet databaseResult) throws SQLException {
         return new Category(
                 databaseResult.getInt("IDCategory"),
                 databaseResult.getString("Name"),
-                (hasColumn(databaseResult) ?
+                (hasColumn(databaseResult, "ArticlesCount") ?
                         databaseResult.getInt("ArticlesCount") : 0
                 )
         );
@@ -75,31 +77,5 @@ public class CategoryRepositoryImpl extends BaseRepository<Category> implements 
         );
 
         triggerListeners();
-    }
-
-
-    private boolean hasColumn(ResultSet databaseResult) throws SQLException {
-        ResultSetMetaData table = databaseResult.getMetaData();
-
-        for(int i = 1; i <= table.getColumnCount(); i++) {
-            if("ArticlesCount".equalsIgnoreCase(table.getColumnLabel(i))) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-
-    public void addListener(Runnable listener) {
-        listeners.add(listener);
-    }
-
-    public void triggerListeners() {
-        SwingUtilities.invokeLater(() -> {
-            for(Runnable listener : listeners) {
-                listener.run();
-            }
-        });
     }
 }

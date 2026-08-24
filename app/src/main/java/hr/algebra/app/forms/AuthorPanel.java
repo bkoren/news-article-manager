@@ -104,6 +104,8 @@ public class AuthorPanel extends JPanel {
                 catch (SQLException ex) {
                     DialogUtils.showError(this, "A database error occurred. Please try again.");
                 }
+
+                newArticleDialog.dispose();
             }));
 
             newArticleDialog.setMinimumSize(new Dimension(400, 100));

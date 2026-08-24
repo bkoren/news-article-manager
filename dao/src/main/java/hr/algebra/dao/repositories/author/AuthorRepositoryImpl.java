@@ -12,7 +12,9 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 public class AuthorRepositoryImpl extends BaseRepository<Author> implements AuthorRepository {
 
-    private final List<Runnable> listeners = new CopyOnWriteArrayList<>();
+    public AuthorRepositoryImpl() {
+        listeners = new CopyOnWriteArrayList<>();
+    }
 
     @Override
     protected Author map(ResultSet databaseResult) throws SQLException {
@@ -75,31 +77,5 @@ public class AuthorRepositoryImpl extends BaseRepository<Author> implements Auth
         );
 
         triggerListeners();
-    }
-
-
-    private boolean hasColumn(ResultSet databaseResult, String column) throws SQLException {
-        ResultSetMetaData table = databaseResult.getMetaData();
-
-        for(int i = 1; i <= table.getColumnCount(); i++) {
-            if(column.equalsIgnoreCase(table.getColumnLabel(i))) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-
-    public void addListener(Runnable listener) {
-        listeners.add(listener);
-    }
-
-    public void triggerListeners() {
-        SwingUtilities.invokeLater(() -> {
-            for(Runnable listener : listeners) {
-                listener.run();
-            }
-        });
     }
 }

@@ -23,9 +23,9 @@ public class ArticleRepositoryImpl extends BaseRepository<Article> implements Ar
     private final AuthorRepository authorRepo;
     private final CategoryRepository categoryRepo;
 
-    private final List<Runnable> listeners = new CopyOnWriteArrayList<>();
-
     public ArticleRepositoryImpl(AuthorRepository authorRepo, CategoryRepository categoryRepo) {
+        listeners = new CopyOnWriteArrayList<>();
+
         this.authorRepo = authorRepo;
         this.categoryRepo = categoryRepo;
     }
@@ -112,6 +112,8 @@ public class ArticleRepositoryImpl extends BaseRepository<Article> implements Ar
             );
         }
 
+        triggerListeners();
+
         return id;
     }
 
@@ -187,8 +189,12 @@ public class ArticleRepositoryImpl extends BaseRepository<Article> implements Ar
     }
 
 
-    public void addListener(Runnable listener) {
+    /*public void addListener(Runnable listener) {
         listeners.add(listener);
+    }
+
+    public void removeListener(Runnable listener) {
+        listeners.remove(listener);
     }
 
     public void triggerListeners() {
@@ -197,5 +203,5 @@ public class ArticleRepositoryImpl extends BaseRepository<Article> implements Ar
                 listener.run();
             }
         });
-    }
+    }*/
 }

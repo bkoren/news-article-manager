@@ -43,11 +43,11 @@ public class AdminPanel extends JPanel {
 
         try {
             importService = new RssImportService(
-                    sourceRepository,
                     authorRepository,
                     categoryRepository,
+                    sourceRepository,
                     articleRepository
-            );
+                    );
         }
         catch (AssetException exception) {
             DialogUtils.showError(this, exception.getMessage());
