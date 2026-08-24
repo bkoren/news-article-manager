@@ -1,7 +1,7 @@
 package hr.algebra.app.windows;
 
-import hr.algebra.app.forms.LoginPanel;
-import hr.algebra.app.forms.RegisterPanel;
+import hr.algebra.app.panels.LoginPanel;
+import hr.algebra.app.panels.RegisterPanel;
 import hr.algebra.dao.models.User;
 import hr.algebra.dao.repositories.user.UserRepositoryImpl;
 import hr.algebra.utilities.gui.DialogUtils;

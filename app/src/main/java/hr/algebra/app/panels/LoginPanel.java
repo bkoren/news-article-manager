@@ -1,4 +1,4 @@
-package hr.algebra.app.forms;
+package hr.algebra.app.panels;
 
 import javax.swing.*;
 import java.awt.*;

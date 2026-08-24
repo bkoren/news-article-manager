@@ -1,6 +1,6 @@
 package hr.algebra.app.background;
 
-import hr.algebra.app.forms.AdminPanel;
+import hr.algebra.app.panels.AdminPanel;
 import hr.algebra.dao.rss.RssImportService;
 import hr.algebra.dao.rss.RssSource;
 

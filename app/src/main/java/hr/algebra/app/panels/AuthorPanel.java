@@ -1,9 +1,7 @@
-package hr.algebra.app.forms;
+package hr.algebra.app.panels;
 
-import hr.algebra.dao.exceptions.AssetException;
 import hr.algebra.dao.models.Author;
-import hr.algebra.dao.models.Category;
-import hr.algebra.dao.repositories.category.CategoryRepositoryImpl;
+import hr.algebra.dao.repositories.author.AuthorRepositoryImpl;
 import hr.algebra.utilities.gui.DialogUtils;
 
 import javax.swing.*;
@@ -14,28 +12,28 @@ import java.awt.event.MouseMotionListener;
 import java.sql.SQLException;
 import java.util.List;
 
-public class CategoryPanel extends JPanel {
+public class AuthorPanel extends JPanel {
     private JTextField searchField;
     private JButton searchBtn;
     private JButton newBtn;
     private JButton editBtn;
     private JButton deleteBtn;
 
-    private JScrollPane categoryDisplayTable;
     private DefaultTableModel tableModel;
-    private JTable categoryData;
+    private JTable authorData;
 
+    private JScrollPane authorDisplayTable;
     private JLabel messageLabel;
     private String searchQuery = "";
 
-    private List<Category> mainList;
+    private final AuthorRepositoryImpl authorRepository;
 
-    private final CategoryRepositoryImpl categoryRepository;
+    private List<Author> mainList;
 
-    public CategoryPanel(CategoryRepositoryImpl categoryRepository) {
-        this.categoryRepository = categoryRepository;
+    public AuthorPanel(AuthorRepositoryImpl authorRepository) {
+        this.authorRepository = authorRepository;
 
-        categoryRepository.addListener(this::fillTheList);
+        authorRepository.addListener(this::fillTheList);
 
         setLayout(new BorderLayout());
 
@@ -62,21 +60,21 @@ public class CategoryPanel extends JPanel {
         deleteBtn.addActionListener(event -> {
             try {
                 if(DialogUtils.confirm(this, "Are you sure you want to delete " +
-                        tableModel.getValueAt(categoryData.getSelectedRow(), 1) + "?")) {
+                        tableModel.getValueAt(authorData.getSelectedRow(), 1) + "?")) {
 
-                    categoryRepository.delete((Integer) tableModel.getValueAt(categoryData.getSelectedRow(), 0));
+                    authorRepository.delete((Integer) tableModel.getValueAt(authorData.getSelectedRow(), 0));
                 }
             }
             catch (SQLException exception) {
                 DialogUtils.showError(this, "A database error occurred. Please try again.");
             }
             catch (ArrayIndexOutOfBoundsException exception) {
-                DialogUtils.showError(this, "No category selected. Please select category.");
+                DialogUtils.showError(this, "No author selected. Please select an author.");
             }
         });
 
         newBtn.addActionListener((event -> {
-            JDialog newArticleDialog = new JDialog(SwingUtilities.getWindowAncestor(this), "Insert new category");
+            JDialog newArticleDialog = new JDialog(SwingUtilities.getWindowAncestor(this), "Insert new author");
             newArticleDialog.setModalityType(Dialog.ModalityType.APPLICATION_MODAL);
             newArticleDialog.setLayout(new FlowLayout());
 
@@ -101,11 +99,13 @@ public class CategoryPanel extends JPanel {
                 }
 
                 try {
-                    categoryRepository.create(new Category(0, inputData));
+                    authorRepository.create(new Author(0, inputData));
                 }
                 catch (SQLException ex) {
                     DialogUtils.showError(this, "A database error occurred. Please try again.");
                 }
+
+                newArticleDialog.dispose();
             }));
 
             newArticleDialog.setMinimumSize(new Dimension(400, 100));
@@ -115,14 +115,14 @@ public class CategoryPanel extends JPanel {
 
         editBtn.addActionListener((event -> {
             try {
-                int id = (Integer) tableModel.getValueAt(categoryData.getSelectedRow(), 0);
+                int id = (Integer) tableModel.getValueAt(authorData.getSelectedRow(), 0);
             }
             catch (ArrayIndexOutOfBoundsException exception) {
-                DialogUtils.showError(this, "No category selected. Please select category.");
+                DialogUtils.showError(this, "No author selected. Please select an author.");
                 return;
             }
 
-            JDialog newArticleDialog = new JDialog(SwingUtilities.getWindowAncestor(this), "Edit category");
+            JDialog newArticleDialog = new JDialog(SwingUtilities.getWindowAncestor(this), "Edit author");
             newArticleDialog.setModalityType(Dialog.ModalityType.APPLICATION_MODAL);
             newArticleDialog.setLayout(new FlowLayout());
 
@@ -147,8 +147,8 @@ public class CategoryPanel extends JPanel {
                 }
 
                 try {
-                    categoryRepository.update(new Category(
-                            (Integer) tableModel.getValueAt(categoryData.getSelectedRow(), 0), inputData));
+                    authorRepository.update(new Author(
+                            (Integer) tableModel.getValueAt(authorData.getSelectedRow(), 0), inputData));
 
                     newArticleDialog.dispose();
                 }
@@ -165,12 +165,12 @@ public class CategoryPanel extends JPanel {
 
     private void fillTheList() {
         try {
-            mainList = categoryRepository.read();
+            mainList = authorRepository.read();
             refreshUi();
         }
         catch (SQLException exception) {
-            if(categoryDisplayTable != null) {
-                categoryDisplayTable.setVisible(false);
+            if(authorDisplayTable != null) {
+                authorDisplayTable.setVisible(false);
             }
             if(messageLabel != null) {
                 remove(messageLabel);
@@ -184,15 +184,15 @@ public class CategoryPanel extends JPanel {
     }
 
     private void refreshUi() {
-        List<Category> filteredList = searchQuery.isEmpty()
+        List<Author> filteredList = searchQuery.isEmpty()
                 ? List.copyOf(mainList)
                 : mainList.stream()
-                  .filter(c -> c.getName().toLowerCase().contains(searchQuery))
-                  .toList();
+                    .filter(a -> a.getName().toLowerCase().contains(searchQuery))
+                    .toList();
 
         if(filteredList.isEmpty()) {
-            if(categoryDisplayTable != null) {
-                categoryDisplayTable.setVisible(false);
+            if(authorDisplayTable != null) {
+                authorDisplayTable.setVisible(false);
             }
 
             if(messageLabel != null) {
@@ -211,23 +211,22 @@ public class CategoryPanel extends JPanel {
                 remove(messageLabel);
             }
 
-            if(categoryDisplayTable != null) {
-                categoryDisplayTable.setVisible(true);
+            if(authorDisplayTable != null) {
+                authorDisplayTable.setVisible(true);
             }
         }
 
         if(tableModel == null) {
-            categoryDisplayTable = buildTable();
-            add(categoryDisplayTable, BorderLayout.CENTER);
+            authorDisplayTable = buildTable();
+            add(authorDisplayTable, BorderLayout.CENTER);
         }
 
         tableModel.setRowCount(0);
-
-        for (Category category : filteredList) {
+        for (Author author : filteredList) {
             tableModel.addRow(new Object[] {
-                    category.getCategoryId(),
-                    category.getName(),
-                    category.getArticlesCount()
+                    author.getAuthorId(),
+                    author.getName(),
+                    author.getArticlesCount()
             });
         }
     }
@@ -253,32 +252,33 @@ public class CategoryPanel extends JPanel {
             }
         };
 
-        categoryData = new JTable(tableModel);
-        categoryData.setFillsViewportHeight(true);
-        categoryData.setAutoCreateRowSorter(false);
-        categoryData.setFont(categoryData.getFont().deriveFont(14f));
-        categoryData.setRowHeight(32);
-        categoryData.setRowMargin(4);
-        categoryData.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        categoryData.removeColumn(categoryData.getColumnModel().getColumn(0));
+        authorData = new JTable(tableModel);
+        authorData.setFillsViewportHeight(true);
+        authorData.setAutoCreateRowSorter(false);
+        authorData.setFont(authorData.getFont().deriveFont(14f));
+        authorData.setRowHeight(32);
+        authorData.setRowMargin(4);
+        authorData.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        authorData.removeColumn(authorData.getColumnModel().getColumn(0));
 
         DefaultTableCellRenderer center = new DefaultTableCellRenderer();
         center.setHorizontalAlignment(SwingConstants.CENTER);
 
-        TableColumn column = categoryData.getColumnModel().getColumn(1);
+        TableColumn column = authorData.getColumnModel().getColumn(1);
         column.setMinWidth(100);
         column.setMaxWidth(100);
         column.setPreferredWidth(100);
         column.setResizable(false);
         column.setCellRenderer(center);
 
-        JTableHeader header = categoryData.getTableHeader();
+        JTableHeader header = authorData.getTableHeader();
         header.setReorderingAllowed(false);
         header.setResizingAllowed(false);
         header.setFocusable(false);
         header.setFont(header.getFont().deriveFont(Font.BOLD, 16f));
 
         TableCellRenderer original = header.getDefaultRenderer();
+
         header.setDefaultRenderer((t, value, sel, focus, row, col) -> {
             Component c = original.getTableCellRendererComponent(t, value, sel, focus, row, col);
             if (c instanceof JLabel label) {
@@ -301,7 +301,7 @@ public class CategoryPanel extends JPanel {
 
         refreshUi();
 
-        return new JScrollPane(categoryData);
+        return new JScrollPane(authorData);
     }
 
     private JPanel buildBtnSection() {

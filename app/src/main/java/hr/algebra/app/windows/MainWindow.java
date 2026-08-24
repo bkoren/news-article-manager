@@ -1,15 +1,14 @@
 package hr.algebra.app.windows;
 
-import hr.algebra.app.forms.AdminPanel;
-import hr.algebra.app.forms.ArticlePanel;
-import hr.algebra.app.forms.AuthorPanel;
-import hr.algebra.app.forms.CategoryPanel;
+import hr.algebra.app.panels.AdminPanel;
+import hr.algebra.app.panels.ArticlePanel;
+import hr.algebra.app.panels.AuthorPanel;
+import hr.algebra.app.panels.CategoryPanel;
 import hr.algebra.dao.models.Role;
 import hr.algebra.dao.models.User;
 import hr.algebra.dao.repositories.article.ArticleRepositoryImpl;
 import hr.algebra.dao.repositories.author.AuthorRepositoryImpl;
 import hr.algebra.dao.repositories.category.CategoryRepositoryImpl;
-import hr.algebra.dao.repositories.source.SourceRepository;
 import hr.algebra.dao.repositories.source.SourceRepositoryImpl;
 
 import javax.swing.*;
@@ -19,39 +18,33 @@ public class MainWindow extends JFrame{
     private final CardLayout containersLayout = new CardLayout();
     private final JPanel     displayContent   = new JPanel(containersLayout);
 
-    private final SourceRepositoryImpl sourceRepository;
-    private final AuthorRepositoryImpl authorRepository;
-    private final CategoryRepositoryImpl categoryRepository;
-    private final ArticleRepositoryImpl articleRepository;
+    JMenuBar menuBar;
+    JButton articlesMenu;
+    JButton authorsMenu;
+    JButton categoriesMenu;
+    JButton adminMenu;
 
     private final User user;
     public MainWindow(User user) {
         this.user = user;
 
-        sourceRepository = new SourceRepositoryImpl();
-        authorRepository = new AuthorRepositoryImpl();
-        categoryRepository = new CategoryRepositoryImpl();
-        articleRepository = new ArticleRepositoryImpl(
+        SourceRepositoryImpl    sourceRepository   = new SourceRepositoryImpl();
+        AuthorRepositoryImpl    authorRepository   = new AuthorRepositoryImpl();
+        CategoryRepositoryImpl  categoryRepository = new CategoryRepositoryImpl();
+        ArticleRepositoryImpl   articleRepository  = new ArticleRepositoryImpl(
                 authorRepository,
                 categoryRepository
         );
 
-        ArticlePanel articlePanel = new ArticlePanel(articleRepository);
-        displayContent.add(articlePanel, "articles");
-
-        AuthorPanel authorPanel = new AuthorPanel(authorRepository);
-        displayContent.add(authorPanel, "authors");
-
-        CategoryPanel categoryPanel = new CategoryPanel(categoryRepository);
-        displayContent.add(categoryPanel, "categories");
-
-        AdminPanel adminPanel = new AdminPanel(
+        displayContent.add(new ArticlePanel(articleRepository), "articles");
+        displayContent.add(new AuthorPanel(authorRepository), "authors");
+        displayContent.add(new CategoryPanel(categoryRepository), "categories");
+        displayContent.add(new AdminPanel(
                 sourceRepository,
                 authorRepository,
                 categoryRepository,
                 articleRepository
-        );
-        displayContent.add(adminPanel, "admin");
+        ), "admin");
 
         containersLayout.show(displayContent, "articles");
         add(displayContent);
@@ -60,20 +53,34 @@ public class MainWindow extends JFrame{
     }
 
     private void buildUi() {
+        setupMainWindow();
+
+        mainMenuButtons();
+
+        addEvents();
+
+        this.setJMenuBar(menuBar);
+        this.setVisible(true);
+
+        openArticlePanel();
+    }
+
+    private void setupMainWindow() {
         setTitle("News App");
         setSize(700, 620);
         setResizable(false);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-        JButton articlesMenu = new JButton("Articles");
+    }
+    private void mainMenuButtons() {
+        articlesMenu = new JButton("Articles");
         articlesMenu.setContentAreaFilled(false);
         articlesMenu.setBorderPainted(false);
 
-        JButton authorsMenu = new JButton("Authors");
+        adminMenu = new JButton("Authors");
         authorsMenu.setContentAreaFilled(false);
         authorsMenu.setBorderPainted(false);
 
-        JButton categoriesMenu = new JButton("Categories");
+        categoriesMenu = new JButton("Categories");
         categoriesMenu.setContentAreaFilled(false);
         categoriesMenu.setBorderPainted(false);
 
@@ -83,7 +90,7 @@ public class MainWindow extends JFrame{
         menuBar.add(categoriesMenu);
 
         if(user.getRole() == Role.ADMIN) {
-            JButton adminMenu = new JButton("Admin");
+            adminMenu= new JButton("Admin");
             adminMenu.setContentAreaFilled(false);
             adminMenu.setBorderPainted(false);
             adminMenu.addActionListener(e -> {
@@ -92,6 +99,8 @@ public class MainWindow extends JFrame{
             menuBar.add(adminMenu);
         }
 
+    }
+    private void addEvents() {
         articlesMenu.addActionListener(e -> {
             openArticlePanel();
         });
@@ -104,24 +113,18 @@ public class MainWindow extends JFrame{
             openCategoriesPanel();
         });
 
-        this.setJMenuBar(menuBar);
-        this.setVisible(true);
-
-        openArticlePanel();
     }
+
 
     private void openCategoriesPanel() {
         containersLayout.show(displayContent, "categories");
     }
-
     private void openAuthorsPanel() {
         containersLayout.show(displayContent, "authors");
     }
-
     private void openArticlePanel() {
         containersLayout.show(displayContent, "articles");
     }
-
     private void openAdminPanel() {
         containersLayout.show(displayContent, "admin");
     }

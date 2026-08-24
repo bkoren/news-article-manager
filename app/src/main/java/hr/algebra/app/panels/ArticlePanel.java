@@ -1,4 +1,4 @@
-package hr.algebra.app.forms;
+package hr.algebra.app.panels;
 
 import hr.algebra.dao.exceptions.AssetException;
 import hr.algebra.dao.models.Article;

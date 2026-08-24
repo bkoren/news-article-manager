@@ -1,4 +1,4 @@
-package hr.algebra.app.forms;
+package hr.algebra.app.panels;
 
 import hr.algebra.app.background.AdminArticleLoadWorker;
 import hr.algebra.app.background.AdminDeleteWorker;
@@ -6,7 +6,6 @@ import hr.algebra.dao.exceptions.AssetException;
 import hr.algebra.dao.models.Source;
 import hr.algebra.dao.repositories.article.ArticleRepositoryImpl;
 import hr.algebra.dao.repositories.author.AuthorRepositoryImpl;
-import hr.algebra.dao.repositories.category.CategoryRepository;
 import hr.algebra.dao.repositories.category.CategoryRepositoryImpl;
 import hr.algebra.dao.repositories.source.SourceRepositoryImpl;
 import hr.algebra.dao.rss.RssImportService;

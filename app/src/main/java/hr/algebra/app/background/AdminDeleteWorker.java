@@ -1,9 +1,6 @@
 package hr.algebra.app.background;
 
-import hr.algebra.app.forms.AdminPanel;
-import hr.algebra.dao.models.Article;
-import hr.algebra.dao.models.Category;
-import hr.algebra.dao.models.Source;
+import hr.algebra.app.panels.AdminPanel;
 import hr.algebra.dao.repositories.article.ArticleRepositoryImpl;
 import hr.algebra.dao.repositories.author.AuthorRepositoryImpl;
 import hr.algebra.dao.repositories.category.CategoryRepositoryImpl;
