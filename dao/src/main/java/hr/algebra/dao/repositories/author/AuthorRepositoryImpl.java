@@ -78,4 +78,8 @@ public class AuthorRepositoryImpl extends BaseRepository<Author> implements Auth
 
         triggerListeners();
     }
+
+    public void triggerAuthors() {
+        triggerListeners();
+    }
 }

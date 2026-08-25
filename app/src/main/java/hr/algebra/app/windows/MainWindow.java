@@ -19,10 +19,10 @@ public class MainWindow extends JFrame{
     private final JPanel     displayContent   = new JPanel(containersLayout);
 
     JMenuBar menuBar;
-    JButton articlesMenu;
-    JButton authorsMenu;
-    JButton categoriesMenu;
-    JButton adminMenu;
+    JButton  articlesMenu;
+    JButton  authorsMenu;
+    JButton  categoriesMenu;
+    JButton  adminMenu;
 
     private final User user;
     public MainWindow(User user) {
@@ -53,11 +53,9 @@ public class MainWindow extends JFrame{
     }
 
     private void buildUi() {
-        setupMainWindow();
-
-        mainMenuButtons();
-
-        addEvents();
+        buildMainWindow();
+        buildMainMenu();
+        buildEvents();
 
         this.setJMenuBar(menuBar);
         this.setVisible(true);
@@ -65,18 +63,18 @@ public class MainWindow extends JFrame{
         openArticlePanel();
     }
 
-    private void setupMainWindow() {
+    private void buildMainWindow() {
         setTitle("News App");
         setSize(700, 620);
         setResizable(false);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     }
-    private void mainMenuButtons() {
+    private void buildMainMenu() {
         articlesMenu = new JButton("Articles");
         articlesMenu.setContentAreaFilled(false);
         articlesMenu.setBorderPainted(false);
 
-        adminMenu = new JButton("Authors");
+        authorsMenu = new JButton("Authors");
         authorsMenu.setContentAreaFilled(false);
         authorsMenu.setBorderPainted(false);
 
@@ -84,7 +82,7 @@ public class MainWindow extends JFrame{
         categoriesMenu.setContentAreaFilled(false);
         categoriesMenu.setBorderPainted(false);
 
-        JMenuBar menuBar = new JMenuBar();
+        menuBar = new JMenuBar();
         menuBar.add(articlesMenu);
         menuBar.add(authorsMenu);
         menuBar.add(categoriesMenu);
@@ -100,7 +98,7 @@ public class MainWindow extends JFrame{
         }
 
     }
-    private void addEvents() {
+    private void buildEvents() {
         articlesMenu.addActionListener(e -> {
             openArticlePanel();
         });

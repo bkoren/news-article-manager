@@ -81,6 +81,8 @@ public class AdminDeleteWorker extends SwingWorker<Integer, String> {
                 }
 
                 articleRepository.triggerListeners();
+                articleRepository.triggerAuthors();
+                articleRepository.triggerCategories();
             }
             else {
                 articleRepository.delete(0);

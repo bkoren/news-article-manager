@@ -13,4 +13,5 @@ public interface AuthorRepository {
     void update(Author author) throws SQLException;
     void delete(int authorId) throws SQLException;
 
+    void triggerAuthors();
 }

@@ -2,7 +2,7 @@ package hr.algebra.dao.models;
 
 import java.util.Objects;
 
-public class Category {
+public class Category implements SearchParams {
     private final int categoryId;
     private String name;
     private int articlesCount;
@@ -18,6 +18,7 @@ public class Category {
         this.articlesCount = articlesCount;
     }
 
+
     public int getCategoryId() {
         return categoryId;
     }
@@ -26,9 +27,12 @@ public class Category {
         return name;
     }
 
+    public String getSearchParam() { return name; }
+
     public void setName(String name) {
         this.name = name;
     }
+
 
     @Override
     public boolean equals(Object o) {

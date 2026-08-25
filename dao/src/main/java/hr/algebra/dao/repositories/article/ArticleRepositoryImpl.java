@@ -188,20 +188,11 @@ public class ArticleRepositoryImpl extends BaseRepository<Article> implements Ar
         triggerListeners();
     }
 
-
-    /*public void addListener(Runnable listener) {
-        listeners.add(listener);
+    public void triggerAuthors() {
+        authorRepo.triggerAuthors();
     }
 
-    public void removeListener(Runnable listener) {
-        listeners.remove(listener);
+    public void triggerCategories() {
+        categoryRepo.triggerCategories();
     }
-
-    public void triggerListeners() {
-        SwingUtilities.invokeLater(() -> {
-            for(Runnable listener : listeners) {
-                listener.run();
-            }
-        });
-    }*/
 }

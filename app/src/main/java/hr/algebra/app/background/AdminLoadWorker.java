@@ -8,7 +8,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.Enumeration;
 
-public class AdminArticleLoadWorker extends SwingWorker<Integer, String> {
+public class AdminLoadWorker extends SwingWorker<Integer, String> {
     RssImportService service;
     RssSource        source;
 
@@ -17,7 +17,7 @@ public class AdminArticleLoadWorker extends SwingWorker<Integer, String> {
     private final JLabel  statusLabel;
     private final JButton loadBtn;
 
-    public AdminArticleLoadWorker(RssImportService service, JComboBox<RssSource> sources, ButtonGroup buttonGroup, JLabel statusLabel, JButton loadBtn) {
+    public AdminLoadWorker(RssImportService service, JComboBox<RssSource> sources, ButtonGroup buttonGroup, JLabel statusLabel, JButton loadBtn) {
         this.statusLabel     = statusLabel;
         this.service         = service;
         this.loadBtn         = loadBtn;

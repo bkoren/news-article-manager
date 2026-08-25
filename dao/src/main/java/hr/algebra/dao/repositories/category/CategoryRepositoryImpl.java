@@ -78,4 +78,8 @@ public class CategoryRepositoryImpl extends BaseRepository<Category> implements 
 
         triggerListeners();
     }
+
+    public void triggerCategories() {
+        triggerListeners();
+    }
 }

@@ -12,4 +12,6 @@ public interface CategoryRepository {
     int create(Category category) throws SQLException;
     void update(Category category) throws SQLException;
     void delete(int categoryId) throws SQLException;
+
+    void triggerCategories();
 }

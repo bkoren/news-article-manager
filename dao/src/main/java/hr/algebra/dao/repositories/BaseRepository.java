@@ -127,7 +127,6 @@ public abstract class BaseRepository<T> {
     public void triggerListeners() {
         SwingUtilities.invokeLater(() -> {
             for(Runnable listener : listeners) {
-                System.out.println(listener);
                 listener.run();
             }
         });

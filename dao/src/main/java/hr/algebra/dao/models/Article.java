@@ -5,15 +5,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class Article implements Comparable<Article>{
+public class Article implements Comparable<Article>, SearchParams{
     private final int articleId;
+
+    private int sourceId;
+
     private String title;
     private String description = null;
     private String link;
-    private LocalDateTime publishedAt = null;
     private String imagePath = null;
-
-    private int sourceId;
+    private LocalDateTime publishedAt = null;
 
     private Source source;
     private List<Author> authors = new ArrayList<>();
@@ -45,73 +46,79 @@ public class Article implements Comparable<Article>{
         return (source != null && source.getSourceId() != 0) ? source.getSourceId() : sourceId;
     }
 
-    public void setSourceId(int sourceId) {
-        this.sourceId = sourceId;
+    public Source getSource() {
+        return source;
     }
 
     public String getTitle() {
         return title;
     }
 
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
+    public String getSearchParam() {
+        return title;
     }
 
     public String getLink() {
         return link;
     }
 
-    public void setLink(String link) {
-        this.link = link;
-    }
-
     public LocalDateTime getPublishedAt() {
         return publishedAt;
     }
 
-    public void setPublishedAt(LocalDateTime publishedAt) {
-        this.publishedAt = publishedAt;
+    public String getDescription() {
+        return description;
     }
 
     public String getImagePath() {
         return imagePath;
     }
 
-    public void setImagePath(String imagePath) {
-        this.imagePath = imagePath;
-    }
-
-    public Source getSource() {
-        return source;
-    }
-
-    public void setSource(Source source) {
-        this.source = source;
-    }
-
     public List<Author> getAuthors() {
         return authors;
-    }
-
-    public void setAuthors(List<Author> authors) {
-        this.authors = authors;
     }
 
     public List<Category> getCategories() {
         return categories;
     }
 
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public void setSourceId(int sourceId) {
+        this.sourceId = sourceId;
+    }
+
+    public void setSource(Source source) {
+        this.source = source;
+    }
+
+    public void setLink(String link) {
+        this.link = link;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public void setPublishedAt(LocalDateTime publishedAt) {
+        this.publishedAt = publishedAt;
+    }
+
+    public void setImagePath(String imagePath) {
+        this.imagePath = imagePath;
+    }
+
+    public void setAuthors(List<Author> authors) {
+        this.authors = authors;
+    }
+
     public void setCategories(List<Category> categories) {
         this.categories = categories;
     }
+
 
     public void addAuthors(List<Author> authors) {
         this.authors.addAll(authors);
@@ -120,6 +127,7 @@ public class Article implements Comparable<Article>{
     public void addCategories(List<Category> categories) {
         this.categories.addAll(categories);
     }
+
 
     @Override
     public boolean equals(Object o) {

@@ -1,6 +1,6 @@
 package hr.algebra.app.panels;
 
-import hr.algebra.app.background.AdminArticleLoadWorker;
+import hr.algebra.app.background.AdminLoadWorker;
 import hr.algebra.app.background.AdminDeleteWorker;
 import hr.algebra.dao.exceptions.AssetException;
 import hr.algebra.dao.models.Source;
@@ -20,14 +20,34 @@ import java.util.List;
 import java.util.Objects;
 
 public class AdminPanel extends JPanel {
-    JPanel stack = new JPanel();
+    private final JPanel stack = new JPanel();
 
-    RssImportService importService;
+    private RssImportService importService;
+
+    private AdminDeleteWorker adminDeleteWorker;
 
     private final SourceRepositoryImpl   sourceRepository;
     private final ArticleRepositoryImpl  articleRepository;
     private final AuthorRepositoryImpl   authorRepository;
     private final CategoryRepositoryImpl categoryRepository;
+
+    private JButton deleteAllBtn;
+    private JButton deleteBtn;
+    private JButton loadBtn;
+
+    private ButtonGroup buttonGroup;
+
+    private JLabel statusLabelDeleteAll;
+    private JLabel statusDeleteBySource;
+    private JLabel statusReloadSources;
+    private JLabel statusLoadArticles;
+    private List<JLabel> statusMsg;
+
+    private JComboBox<RssSource> deleteSourcesList;
+    private JComboBox<RssSource> loadSourcesList;
+    private List<DefaultComboBoxModel<RssSource>> listOfJComboBoxes;
+
+    private static boolean threadBusy = false;
 
     public AdminPanel(
             SourceRepositoryImpl sourceRepository,
@@ -70,15 +90,6 @@ public class AdminPanel extends JPanel {
         add(stack, BorderLayout.NORTH);
     }
 
-    private static boolean threadBusy = false;
-
-    private List<DefaultComboBoxModel<RssSource>> listOfJComboBoxes;
-    private List<JLabel> statusMsg;
-
-
-    AdminDeleteWorker adminDeleteWorker;
-    private JButton deleteAllBtn;
-    private JLabel  statusLabelDeleteAll;
     private Component deleteAllCard() {
         JPanel card = buildCustomPanel();
 
@@ -122,9 +133,6 @@ public class AdminPanel extends JPanel {
         return card;
     }
 
-    private JButton deleteBtn;
-    private JLabel statusDeleteBySource;
-    private JComboBox<RssSource> deleteSourcesList;
     private Component deleteSourceCard() {
         JPanel card = buildCustomPanel();
 
@@ -178,7 +186,6 @@ public class AdminPanel extends JPanel {
         return card;
     }
 
-    private JLabel statusReloadSources;
     private Component reloadSourceCard() {
         JPanel card = buildCustomPanel();
 
@@ -220,11 +227,6 @@ public class AdminPanel extends JPanel {
         return card;
     }
 
-    AdminArticleLoadWorker adminArticleLoadWorker;
-    private JButton loadBtn;
-    private ButtonGroup buttonGroup;
-    private JLabel statusLoadArticles;
-    private JComboBox<RssSource> loadSourcesList;
     private Component loadArticlesCard() {
         JPanel card = buildCustomPanel();
 
@@ -439,7 +441,7 @@ public class AdminPanel extends JPanel {
     }
 
     private void importLogic() {
-        adminArticleLoadWorker = new AdminArticleLoadWorker(
+        AdminLoadWorker adminLoadWorker = new AdminLoadWorker(
                 importService,
                 loadSourcesList,
                 buttonGroup,
@@ -450,7 +452,7 @@ public class AdminPanel extends JPanel {
         try {
             setStatusMsg(statusLoadArticles, "Downloading...", null);
             if (Objects.equals(buttonGroup.getSelection().getActionCommand(), "all")) {
-                adminArticleLoadWorker.execute();
+                adminLoadWorker.execute();
             }
             else if (Objects.equals(buttonGroup.getSelection().getActionCommand(), "one")) {
                 SourceRepositoryImpl sourceRepository = new SourceRepositoryImpl();
@@ -462,14 +464,15 @@ public class AdminPanel extends JPanel {
                     deleteSource.execute();
                 }
 
-                adminArticleLoadWorker.setSource(selectedItem);
-                adminArticleLoadWorker.execute();
+                adminLoadWorker.setSource(selectedItem);
+                adminLoadWorker.execute();
             }
         }
         catch (Exception exception) {
             setStatusMsg(statusLoadArticles, "Error occurred!", Color.RED);
         }
     }
+
 
     public static void setStatusMsg(JLabel label, String msg, Color color) {;
         Font fontStatusBold = label.getFont().deriveFont(Font.BOLD);

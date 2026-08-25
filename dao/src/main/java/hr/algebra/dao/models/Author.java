@@ -2,8 +2,9 @@ package hr.algebra.dao.models;
 
 import java.util.Objects;
 
-public class Author {
+public class Author implements SearchParams {
     private final int authorId;
+
     private String name;
     private int articlesCount;
 
@@ -29,9 +30,12 @@ public class Author {
         return name;
     }
 
+    public String getSearchParam() { return name; }
+
     public void setName(String name) {
         this.name = name;
     }
+
 
     @Override
     public boolean equals(Object o) {
