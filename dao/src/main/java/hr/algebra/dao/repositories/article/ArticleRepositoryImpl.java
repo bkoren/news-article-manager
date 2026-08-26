@@ -188,6 +188,7 @@ public class ArticleRepositoryImpl extends BaseRepository<Article> implements Ar
         triggerListeners();
     }
 
+
     public void triggerAuthors() {
         authorRepo.triggerAuthors();
     }

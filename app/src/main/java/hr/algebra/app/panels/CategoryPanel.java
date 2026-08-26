@@ -45,7 +45,17 @@ public class CategoryPanel extends BasePanel<Category> {
         });
 
         deleteBtn.addActionListener(event -> {
-            deleteCategoryLogic();
+            try {
+                int categoryId = (Integer) tableModel.getValueAt(entityData.getSelectedRow(), 0);
+
+                deleteCategoryLogic(categoryId);
+            }
+            catch (ArrayIndexOutOfBoundsException exception) {
+                DialogUtils.showError(this, "No category selected. Please select category.");
+            }
+            catch (NullPointerException exception) {
+                return;
+            }
         });
 
         newBtn.addActionListener((event -> {
@@ -53,7 +63,17 @@ public class CategoryPanel extends BasePanel<Category> {
         }));
 
         editBtn.addActionListener((event -> {
-            editCategoryLogic();
+            try {
+                int categoryId = (Integer) tableModel.getValueAt(entityData.getSelectedRow(), 0);
+
+                editCategoryLogic(categoryId);
+            }
+            catch (ArrayIndexOutOfBoundsException exception) {
+                DialogUtils.showError(this, "No category selected. Please select category.");
+            }
+            catch (NullPointerException exception) {
+                return;
+            }
         }));
     }
 
@@ -103,18 +123,7 @@ public class CategoryPanel extends BasePanel<Category> {
         newCategoryDialog.setVisible(true);
     }
 
-    private void editCategoryLogic() {
-        try {
-            tableModel.getValueAt(entityData.getSelectedRow(), 0);
-        }
-        catch (ArrayIndexOutOfBoundsException exception) {
-            DialogUtils.showError(this, "No category selected. Please select category.");
-            return;
-        }
-        catch (NullPointerException exception) {
-            return;
-        }
-
+    private void editCategoryLogic(int categoryId) {
         JDialog editCategoryDialog = buildDialog("Edit category");
 
         JPanel inputSection   = new JPanel();
@@ -138,8 +147,7 @@ public class CategoryPanel extends BasePanel<Category> {
             }
 
             try {
-                categoryRepository.update(new Category(
-                        (Integer) tableModel.getValueAt(entityData.getSelectedRow(), 0), inputData));
+                categoryRepository.update(new Category(categoryId, inputData));
             }
             catch (SQLException ex) {
                 DialogUtils.showError(this, "A database error occurred. Please try again.");
@@ -152,22 +160,16 @@ public class CategoryPanel extends BasePanel<Category> {
         editCategoryDialog.setVisible(true);
     }
 
-    private void deleteCategoryLogic() {
+    private void deleteCategoryLogic(int categoryId) {
         try {
             if(DialogUtils.confirm(this, "Are you sure you want to delete " +
                     tableModel.getValueAt(entityData.getSelectedRow(), 1) + "?")) {
 
-                categoryRepository.delete((Integer) tableModel.getValueAt(entityData.getSelectedRow(), 0));
+                categoryRepository.delete(categoryId);
             }
         }
         catch (SQLException exception) {
             DialogUtils.showError(this, "A database error occurred. Please try again.");
-        }
-        catch (ArrayIndexOutOfBoundsException exception) {
-            DialogUtils.showError(this, "No category selected. Please select category.");
-        }
-        catch (NullPointerException exception) {
-            return;
         }
     }
 

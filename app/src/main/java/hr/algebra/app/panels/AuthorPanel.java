@@ -45,7 +45,17 @@ public class AuthorPanel extends BasePanel<Author> {
         });
 
         deleteBtn.addActionListener(event -> {
-            deleteAuthorLogic();
+            try {
+                int authorId = (Integer) tableModel.getValueAt(entityData.getSelectedRow(), 1);
+
+                deleteAuthorLogic(authorId);
+            }
+            catch (ArrayIndexOutOfBoundsException exception) {
+                DialogUtils.showError(this, "No author selected. Please select an author.");
+            }
+            catch (NullPointerException exception) {
+                return;
+            }
         });
 
         newBtn.addActionListener((event -> {
@@ -53,7 +63,17 @@ public class AuthorPanel extends BasePanel<Author> {
         }));
 
         editBtn.addActionListener((event -> {
-            editAuthorLogic();
+            try {
+                int authorId = (Integer) tableModel.getValueAt(entityData.getSelectedRow(), 1);
+
+                editAuthorLogic(authorId);
+            }
+            catch (ArrayIndexOutOfBoundsException exception) {
+                DialogUtils.showError(this, "No author selected. Please select an author.");
+            }
+            catch (NullPointerException exception) {
+                return;
+            }
         }));
     }
 
@@ -103,18 +123,7 @@ public class AuthorPanel extends BasePanel<Author> {
         newAuthorDialog.setVisible(true);
     }
 
-    private void editAuthorLogic() {
-        try {
-            tableModel.getValueAt(entityData.getSelectedRow(), 0);
-        }
-        catch (ArrayIndexOutOfBoundsException exception) {
-            DialogUtils.showError(this, "No author selected. Please select an author.");
-            return;
-        }
-        catch (NullPointerException exception) {
-            return;
-        }
-
+    private void editAuthorLogic(int authorId) {
         JDialog editAuthorDialog = buildDialog("Edit author");
 
         JPanel inputSection   = new JPanel();
@@ -138,9 +147,7 @@ public class AuthorPanel extends BasePanel<Author> {
             }
 
             try {
-                authorRepository.update(new Author(
-                        (Integer) tableModel.getValueAt(entityData.getSelectedRow(), 0), inputData));
-
+                authorRepository.update(new Author(authorId, inputData));
             }
             catch (SQLException ex) {
                 DialogUtils.showError(this, "A database error occurred. Please try again.");
@@ -148,28 +155,21 @@ public class AuthorPanel extends BasePanel<Author> {
             finally {
                 editAuthorDialog.dispose();
             }
-
         }));
 
         editAuthorDialog.setVisible(true);
     }
 
-    private void deleteAuthorLogic() {
+    private void deleteAuthorLogic(int authorId) {
         try {
             if(DialogUtils.confirm(this, "Are you sure you want to delete " +
                     tableModel.getValueAt(entityData.getSelectedRow(), 1) + "?")) {
 
-                authorRepository.delete((Integer) tableModel.getValueAt(entityData.getSelectedRow(), 0));
+                authorRepository.delete(authorId);
             }
         }
         catch (SQLException exception) {
             DialogUtils.showError(this, "A database error occurred. Please try again.");
-        }
-        catch (ArrayIndexOutOfBoundsException exception) {
-            DialogUtils.showError(this, "No author selected. Please select an author.");
-        }
-        catch (NullPointerException exception) {
-            return;
         }
     }
 

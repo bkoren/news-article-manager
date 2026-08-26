@@ -1,10 +1,12 @@
 package hr.algebra.app.background;
 
 import hr.algebra.app.panels.AdminPanel;
+import hr.algebra.dao.models.Article;
 import hr.algebra.dao.repositories.article.ArticleRepositoryImpl;
 import hr.algebra.dao.repositories.author.AuthorRepositoryImpl;
 import hr.algebra.dao.repositories.category.CategoryRepositoryImpl;
 import hr.algebra.dao.repositories.source.SourceRepositoryImpl;
+import hr.algebra.dao.rss.AssetService;
 import hr.algebra.dao.rss.RssSource;
 
 import javax.swing.*;
