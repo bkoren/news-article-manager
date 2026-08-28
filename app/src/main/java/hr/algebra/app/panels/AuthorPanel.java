@@ -87,7 +87,7 @@ public class AuthorPanel extends BasePanel<Author> {
     }
 
     private void newAuthorLogic() {
-        JDialog newAuthorDialog = buildDialog("Insert new author");
+        JDialog newAuthorDialog = new BaseDialog("Insert new author");
 
         JPanel inputSection   = new JPanel();
         JTextField inputField = new JTextField(20);
@@ -124,7 +124,7 @@ public class AuthorPanel extends BasePanel<Author> {
     }
 
     private void editAuthorLogic(int authorId) {
-        JDialog editAuthorDialog = buildDialog("Edit author");
+        JDialog editAuthorDialog = new BaseDialog("Edit author");
 
         JPanel inputSection   = new JPanel();
         JTextField inputField = new JTextField(20);

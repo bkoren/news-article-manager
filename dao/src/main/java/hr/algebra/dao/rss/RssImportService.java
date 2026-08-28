@@ -58,7 +58,7 @@ public class RssImportService {
         return sumOfDownloadedArticles;
     }
 
-    public int importFrom(RssSource source) throws ParserConfigurationException, IOException, SAXException, SQLException, AssetException {
+    public int importFrom(RssSource source) throws ParserConfigurationException, IOException, SAXException, SQLException {
         RssParser parser = new RssParser(source);
 
         List<Callable<ParsedItem>> tasks = new ArrayList<>();
@@ -88,7 +88,7 @@ public class RssImportService {
         return exportToDB(parsed);
     }
 
-    private int exportToDB(List<ParsedItem> parsed) throws SQLException, AssetException {
+    private int exportToDB(List<ParsedItem> parsed) throws SQLException {
         int sumOfImports = 0;
         int sourceId = sourceRepository.create(parsed.getFirst().source());
 

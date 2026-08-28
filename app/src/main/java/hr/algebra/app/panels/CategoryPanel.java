@@ -87,7 +87,7 @@ public class CategoryPanel extends BasePanel<Category> {
     }
 
     private void newCategoryLogic() {
-        JDialog newCategoryDialog = buildDialog("Insert new category");
+        JDialog newCategoryDialog = new BaseDialog("Insert new category");
 
         JPanel inputSection   = new JPanel();
         JTextField inputField = new JTextField(20);
@@ -124,7 +124,7 @@ public class CategoryPanel extends BasePanel<Category> {
     }
 
     private void editCategoryLogic(int categoryId) {
-        JDialog editCategoryDialog = buildDialog("Edit category");
+        JDialog editCategoryDialog = new BaseDialog("Edit category");
 
         JPanel inputSection   = new JPanel();
         JTextField inputField = new JTextField(20);

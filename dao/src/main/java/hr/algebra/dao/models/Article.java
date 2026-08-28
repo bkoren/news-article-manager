@@ -1,24 +1,52 @@
 package hr.algebra.dao.models;
 
+import javax.lang.model.element.Name;
+import javax.xml.bind.annotation.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+@XmlRootElement(name = "article")
+@XmlAccessorType(XmlAccessType.FIELD)
 public class Article implements Comparable<Article>, SearchParams{
+
+    @XmlAttribute
     private final int articleId;
 
+    @XmlTransient
     private int sourceId;
 
+    @XmlElement(name = "title")
     private String title;
+
+    @XmlElement(name = "description")
     private String description = null;
+
+    @XmlElement(name = "link")
     private String link;
+
+    @XmlElement(name = "imagePath")
     private String imagePath = null;
+
+    @XmlTransient
     private LocalDateTime publishedAt = null;
 
+    @XmlElement(name = "publishedAt")
+    private String dateForXml = null;
+
+    @XmlElement(name = "source")
     private Source source;
+
+    @XmlTransient
     private List<Author> authors = new ArrayList<>();
+
+    @XmlTransient
     private List<Category> categories = new ArrayList<>();
+
+    private Article() {
+        this.articleId = 0;
+    }
 
     public Article(
             int articleId,
@@ -36,6 +64,8 @@ public class Article implements Comparable<Article>, SearchParams{
         this.publishedAt = publishedAt;
         this.imagePath = imagePath;
         this.source = source;
+
+        dateForXml = publishedAt.toString();
     }
 
     public int getArticleId() {

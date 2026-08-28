@@ -29,6 +29,7 @@ public class BasePanel<T extends SearchParams>  extends JPanel {
     protected JTable            entityData;
     protected JLabel            mainMessageLabel;
 
+
     protected String searchQuery = "";
 
     protected BasePanel() {
@@ -108,15 +109,6 @@ public class BasePanel<T extends SearchParams>  extends JPanel {
         return new JScrollPane(entityData);
     }
 
-    protected JDialog buildDialog(String message) {
-        JDialog result = new JDialog(SwingUtilities.getWindowAncestor(this), message);
-        result.setModalityType(Dialog.ModalityType.APPLICATION_MODAL);
-        result.setLayout(new FlowLayout());
-        result.setMinimumSize(new Dimension(400, 100));
-        result.setLocationRelativeTo(this);
-
-        return result;
-    }
 
     private JPanel buildBtnSection() {
         btnSection = new JPanel(new FlowLayout(FlowLayout.RIGHT, 5, 5));

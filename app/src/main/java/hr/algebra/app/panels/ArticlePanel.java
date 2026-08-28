@@ -3,35 +3,29 @@ package hr.algebra.app.panels;
 import hr.algebra.dao.exceptions.AssetException;
 import hr.algebra.dao.models.Article;
 import hr.algebra.dao.models.Category;
+import hr.algebra.dao.models.Source;
 import hr.algebra.dao.repositories.article.ArticleRepositoryImpl;
 import hr.algebra.utilities.gui.DialogUtils;
 
 import javax.swing.*;
-import javax.swing.border.Border;
-import javax.swing.table.*;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableColumn;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
+import javax.xml.bind.annotation.XmlRootElement;
 import java.awt.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.sql.SQLException;
-import java.util.List;
 import java.util.Optional;
-import java.util.regex.Pattern;
 
 public class ArticlePanel extends BasePanel<Article> {
-
-    private static final String IMAGE_FOLDER = "assets";
-
-    private static final int DIALOG_WIDTH  = 640;
-    private static final int DIALOG_HEIGHT = 550;
-
-    private static final int IMAGE_WIDTH  = DIALOG_WIDTH;
-    private static final int IMAGE_HEIGHT = 240;
-
-    private static final Color CATEGORY_COLOR = new Color(38, 108, 191);
-
-    private static final int CATEGORY_CORNER = 16;
-
     private final ArticleRepositoryImpl articleRepository;
 
     public ArticlePanel(ArticleRepositoryImpl articleRepository) {
@@ -99,34 +93,6 @@ public class ArticlePanel extends BasePanel<Article> {
         btnSection.add(viewBtn, 0);
     }
 
-    private JLabel buildCategoryChip(Category category) {
-        JLabel chip = new JLabel(category.getName()) {
-            @Override
-            protected void paintComponent(Graphics graphics) {
-                Graphics2D graphics2D = (Graphics2D) graphics.create();
-                graphics2D.setRenderingHint(
-                        RenderingHints.KEY_ANTIALIASING,
-                        RenderingHints.VALUE_ANTIALIAS_ON);
-
-                graphics2D.setColor(getBackground());
-                graphics2D.fillRoundRect(0, 0, getWidth(), getHeight(),
-                        CATEGORY_CORNER, CATEGORY_CORNER);
-
-                graphics2D.dispose();
-
-                super.paintComponent(graphics);
-            }
-        };
-        chip.setOpaque(false);
-
-        chip.setBackground(CATEGORY_COLOR);
-        chip.setForeground(Color.WHITE);
-
-        chip.setBorder(BorderFactory.createEmptyBorder(4, 10, 4, 10));
-
-        return chip;
-    }
-
     private void buildEvents() {
         searchBtn.addActionListener(event -> {
             searchArticleLogic();
@@ -159,95 +125,78 @@ public class ArticlePanel extends BasePanel<Article> {
                 return;
             }
         });
-    }
 
-    private JLabel buildImageBox(Article article) {
-        JLabel imageBox = new JLabel();
+        newBtn.addActionListener(event -> {
+            newArticleLogic();
+        });
 
-        imageBox.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY, 10, true));
-        imageBox.setPreferredSize(new Dimension(IMAGE_WIDTH, IMAGE_HEIGHT));
-        imageBox.setHorizontalAlignment(SwingConstants.CENTER);
-        imageBox.setVerticalAlignment(SwingConstants.CENTER);
+        editBtn.addActionListener(event -> {
+            try {
+                int articleId  = (Integer) tableModel.getValueAt(entityData.getSelectedRow(), 0);
 
-        if (article == null || article.getImagePath() == null) {
-            imageBox.setText("No image available.");
-            return imageBox;
-        }
-
-        Path imageFile = Paths.get(IMAGE_FOLDER)
-                .resolve(Paths.get(article.getImagePath()).getFileName());
-
-        if (!Files.exists(imageFile)) {
-            imageBox.setText("Image not found.");
-            return imageBox;
-        }
-
-        ImageIcon originalImage = new ImageIcon(imageFile.toString());
-
-        Image scaledImage = originalImage.getImage()
-                .getScaledInstance(IMAGE_WIDTH, IMAGE_HEIGHT, Image.SCALE_SMOOTH);
-
-        imageBox.setIcon(new ImageIcon(scaledImage));
-
-        return imageBox;
+                editArticleLogic(articleId);
+            }
+            catch (ArrayIndexOutOfBoundsException exception) {
+                DialogUtils.showError(this, "No article selected. Please select an article");
+            }
+            catch (NullPointerException exception) {
+                return;
+            }
+        });
     }
 
 
-    private void viewArticleLogic(int articleId) {
-        Article selectedArticle = mainEntityList.stream()
-                .filter(article -> article.getArticleId() == articleId)
-                .findFirst()
-                .orElse(null);
+    private void editArticleLogic(int articleId) {
+        Article selectedArticle = getSelectedArticle(articleId);
         assert selectedArticle != null;
 
-        JDialog viewArticleDialog = buildDialog("View article");
+        JDialog newArticleDialog = new BaseDialog("Edit article");
 
-        viewArticleDialog.setLayout(new BorderLayout());
-        viewArticleDialog.add(buildImageBox(selectedArticle), BorderLayout.NORTH);
+        newArticleDialog.setVisible(true);
+    }
 
-        JLabel title = new JLabel(selectedArticle.getTitle());
-        title.setFont(title.getFont().deriveFont(Font.BOLD, 16f));
+    private void newArticleLogic() {
+        BaseDialog newArticleDialog = new BaseDialog(null, "New article");
 
-        JLabel mainInfo = new JLabel(
-                selectedArticle.getSource().getName() + "  |  " +
-                selectedArticle.getPublishedAt().toString().replaceFirst("T", " ") + "  |  " +
-                (!selectedArticle.getAuthors().isEmpty()
-                        ? (String.join(" | ", selectedArticle.getAuthors().toString().replace("[", "").replace("]", "")))
-                        : "No author available."
-                )
-        );
+        JPanel leftColumn = newArticleDialog.buildLeftColumn();
+        JPanel rightColumn = newArticleDialog.buildRightColumn();
 
-        mainInfo.setFont(title.getFont().deriveFont(Font.ITALIC, 12f));
+        JPanel columns = new JPanel(new GridLayout(1, 2, 5, 0));
+        columns.add(leftColumn);
+        columns.add(rightColumn);
 
-        JPanel topSection = new JPanel();
+        JPanel bottomContent = newArticleDialog.buildBottomContent();
 
-        topSection.setLayout(new BoxLayout(topSection, BoxLayout.Y_AXIS));
+        JPanel content = new JPanel(new BorderLayout(0, 5));
+        content.add(columns, BorderLayout.CENTER);
+        content.add(bottomContent, BorderLayout.SOUTH);
 
-        topSection.add(title);
-        topSection.add(Box.createVerticalStrut(7));
-        topSection.add(mainInfo);
-        topSection.add(Box.createVerticalStrut(7));
-        topSection.setBorder(BorderFactory.createEmptyBorder(7,5,5,5));
+        newArticleDialog.add(content, BorderLayout.CENTER);
+;       newArticleDialog.setVisible(true);
+    }
 
-        JPanel categories = new JPanel(new FlowLayout(FlowLayout.LEFT));
+    private void viewArticleLogic(int articleId) {
+        Article selectedArticle = getSelectedArticle(articleId);
+        assert selectedArticle != null;
 
-        for(Category category : selectedArticle.getCategories()) {
-            categories.add(buildCategoryChip(category));
-        }
+        BaseDialog viewArticleDialog = new BaseDialog(selectedArticle, "View article");
+
+        viewArticleDialog.buildImageBox(640, 240);
+
+        JPanel topSection = viewArticleDialog.buildTopSection();
+        JPanel bodySection = viewArticleDialog.buildBodySection();
+        JPanel bottomSection = viewArticleDialog.buildBottomSection();
+
         JPanel contentSection = new JPanel(new BorderLayout());
-
         contentSection.add(topSection, BorderLayout.NORTH);
-        contentSection.add(categories, BorderLayout.CENTER);
+        contentSection.add(bodySection, BorderLayout.CENTER);
+        contentSection.add(bottomSection, BorderLayout.SOUTH);
 
         viewArticleDialog.add(contentSection, BorderLayout.CENTER);
-
-        viewArticleDialog.setSize(DIALOG_WIDTH, DIALOG_HEIGHT);
-        viewArticleDialog.setResizable(false);
-        viewArticleDialog.setLocationRelativeTo(this);
         viewArticleDialog.setVisible(true);
     }
 
-    protected void searchArticleLogic() {
+    private void searchArticleLogic() {
         searchQuery = searchField.getText().trim().toLowerCase();
 
         refreshUi();
@@ -272,6 +221,13 @@ public class ArticlePanel extends BasePanel<Article> {
         }
     }
 
+
+    private Article getSelectedArticle(int articleId) {
+        return mainEntityList.stream()
+                .filter(article -> article.getArticleId() == articleId)
+                .findFirst()
+                .orElse(null);
+    }
 
     @Override
     protected void refreshUi() {
