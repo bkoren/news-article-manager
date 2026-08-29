@@ -46,7 +46,7 @@ public class AuthorPanel extends BasePanel<Author> {
 
         deleteBtn.addActionListener(event -> {
             try {
-                int authorId = (Integer) tableModel.getValueAt(entityData.getSelectedRow(), 1);
+                int authorId = (Integer) tableModel.getValueAt(entityData.getSelectedRow(), 0);
 
                 deleteAuthorLogic(authorId);
             }
@@ -54,7 +54,7 @@ public class AuthorPanel extends BasePanel<Author> {
                 DialogUtils.showError(this, "No author selected. Please select an author.");
             }
             catch (NullPointerException exception) {
-                return;
+                //ignore;
             }
         });
 
@@ -64,7 +64,7 @@ public class AuthorPanel extends BasePanel<Author> {
 
         editBtn.addActionListener((event -> {
             try {
-                int authorId = (Integer) tableModel.getValueAt(entityData.getSelectedRow(), 1);
+                int authorId = (Integer) tableModel.getValueAt(entityData.getSelectedRow(), 0);
 
                 editAuthorLogic(authorId);
             }
@@ -72,7 +72,7 @@ public class AuthorPanel extends BasePanel<Author> {
                 DialogUtils.showError(this, "No author selected. Please select an author.");
             }
             catch (NullPointerException exception) {
-                return;
+                //ignore;
             }
         }));
     }
@@ -181,7 +181,7 @@ public class AuthorPanel extends BasePanel<Author> {
             if(displayTable != null) {
                 displayTable.setVisible(false);
             }
-            displayMainMessage("No available content.");
+            displayMainMessage("No available authors.");
             return;
         }
 

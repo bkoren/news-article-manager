@@ -1,8 +1,11 @@
 package hr.algebra.app.panels;
 
 import hr.algebra.dao.models.Article;
+import hr.algebra.dao.models.Author;
 import hr.algebra.dao.models.Category;
 import hr.algebra.dao.models.Source;
+import hr.algebra.dao.repositories.article.ArticleRepositoryImpl;
+import hr.algebra.dao.repositories.author.AuthorRepositoryImpl;
 import hr.algebra.utilities.gui.DialogUtils;
 
 import javax.swing.*;
@@ -19,8 +22,11 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.sql.SQLException;
 
 public class BaseDialog extends JDialog {
+    private ArticleRepositoryImpl articleRepository;
+
     private Article article;
 
     private final int DIALOG_WIDTH;
@@ -35,6 +41,14 @@ public class BaseDialog extends JDialog {
     private JTextArea           descriptionInput;
     private JComboBox<Category> categoriesInput;
     private JComboBox<Source>   sourcesInput;
+    private JButton             addAuthorBtn;
+    private JButton             removeAuthorBtn;
+
+    private DefaultListModel<Author> chosenAuthorsModel;
+    private DefaultListModel<Author> selectAuthorsModel;
+
+    private JList<Author> chosenAuthors;
+    private JList<Author> selectAuthors;
 
     protected BaseDialog(Article selectedArticle, String dialogTitle) {
         this.article = selectedArticle;
@@ -142,9 +156,14 @@ public class BaseDialog extends JDialog {
         descriptionView.setEditable(false);
         descriptionView.setLineWrap(true);
         descriptionView.setWrapStyleWord(true);
+        descriptionView.setFont(descriptionView.getFont().deriveFont(Font.PLAIN, 14f));
+
+        JScrollPane descriptionScrollView = new JScrollPane(descriptionView);
+        descriptionScrollView.setBorder(null);
+        descriptionScrollView.setOpaque(false);
 
         result.add(categoriesView, BorderLayout.NORTH);
-        result.add(descriptionView, BorderLayout.CENTER);
+        result.add(descriptionScrollView, BorderLayout.CENTER);
 
         return result;
     }
@@ -191,9 +210,7 @@ public class BaseDialog extends JDialog {
         JButton exportBtn = new JButton("Export");
         exportBtn.setBackground(Color.BLUE);
 
-        exportBtn.addActionListener(event -> {
-            exportLogic();
-        });
+        exportBtn.addActionListener(event -> exportLogic());
 
         result.add(linkView, BorderLayout.WEST);
         result.add(exportBtn, BorderLayout.EAST);
@@ -203,7 +220,7 @@ public class BaseDialog extends JDialog {
 
     public JPanel buildLeftColumn() {
         JPanel result = new JPanel();
-        result.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
+        result.setBorder(BorderFactory.createEmptyBorder(5,10,5,5));
         result.setLayout(new BoxLayout(result, BoxLayout.Y_AXIS));
 
         buildImageBox(320, 200);
@@ -227,10 +244,14 @@ public class BaseDialog extends JDialog {
         descriptionLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         descriptionInput = new JTextArea();
-        descriptionInput.setAlignmentX(Component.LEFT_ALIGNMENT);
-        descriptionInput.setRows(3);
+        descriptionInput.setRows(5);
         descriptionInput.setLineWrap(true);
-        descriptionInput.setMaximumSize(new Dimension(Integer.MAX_VALUE, descriptionInput.getPreferredSize().height * 3));
+
+        JScrollPane descriptionScrollInput = new JScrollPane(descriptionInput);
+        descriptionScrollInput.setAlignmentX(Component.LEFT_ALIGNMENT);
+        descriptionScrollInput.setMaximumSize(
+                new Dimension(Integer.MAX_VALUE, descriptionScrollInput.getPreferredSize().height)
+        );
 
         JLabel sourceLabel = new JLabel("Source");
         sourceLabel.setFont(sourceLabel.getFont().deriveFont(16f));
@@ -256,7 +277,7 @@ public class BaseDialog extends JDialog {
         result.add(titleInput);
         result.add(Box.createVerticalStrut(10));
         result.add(descriptionLabel);
-        result.add(descriptionInput);
+        result.add(descriptionScrollInput);
         result.add(Box.createVerticalStrut(10));
         result.add(sourceLabel);
         result.add(sourcesInput);
@@ -269,10 +290,56 @@ public class BaseDialog extends JDialog {
 
     public JPanel buildRightColumn() {
         JPanel result = new JPanel();
+        result.setBorder(BorderFactory.createEmptyBorder(5,5,5,15));
+        result.setLayout(new BoxLayout(result, BoxLayout.Y_AXIS));
 
-        JLabel authorsLabel = new JLabel("This article's authors - drop here");
+        JLabel dropHereLabel = new JLabel("This article's authors - drop here");
+        dropHereLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        result.add(authorsLabel);
+        chosenAuthorsModel = new DefaultListModel<>();
+        chosenAuthors = new JList<>(chosenAuthorsModel);
+        chosenAuthors.setDragEnabled(true);
+        chosenAuthors.setDropMode(DropMode.INSERT);
+
+        JLabel arrowUpLabel = new JLabel("▲ drag up");
+        arrowUpLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        arrowUpLabel.setForeground(new Color(224, 240, 255));
+
+        JLabel dragFromLabel = new JLabel("Available authors - drag from here");
+        dragFromLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        selectAuthorsModel = new DefaultListModel<>();
+        try {
+            new AuthorRepositoryImpl().read().forEach(author -> selectAuthorsModel.addElement(author));
+        }
+        catch (SQLException exception) {
+            selectAuthorsModel.removeAllElements();
+
+            DialogUtils.showError(this, "Error occurred, some data can't be shown!");
+        }
+        selectAuthors = new JList<>(selectAuthorsModel);
+        chosenAuthors.setDragEnabled(true);
+        chosenAuthors.setDropMode(DropMode.INSERT);
+
+        addAuthorBtn = new JButton("Add ▲");
+        removeAuthorBtn = new JButton("Remove ▼");
+
+        JPanel btnSection = new JPanel();
+        btnSection.add(addAuthorBtn);
+        btnSection.add(removeAuthorBtn);
+
+
+        result.add(dropHereLabel);
+        result.add(Box.createVerticalStrut(7));
+        result.add(new JScrollPane(chosenAuthors));
+        result.add(Box.createVerticalStrut(7));
+        result.add(arrowUpLabel);
+        result.add(Box.createVerticalStrut(7));
+        result.add(dragFromLabel);
+        result.add(Box.createVerticalStrut(7));
+        result.add(new JScrollPane(selectAuthors));
+        result.add(Box.createVerticalStrut(7));
+        result.add(btnSection);
 
         return  result;
     }

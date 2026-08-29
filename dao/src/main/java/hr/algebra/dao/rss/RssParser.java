@@ -15,6 +15,7 @@ import java.net.HttpURLConnection;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -23,11 +24,11 @@ public class RssParser {
 
     private String imgExtension;
 
-    RssParser(RssSource source) {
+    public RssParser(RssSource source) {
         this.source = source;
     }
 
-    List<RssItem> parseItems() throws ParserConfigurationException, IOException, SAXException {
+    public List<RssItem> parseItems() throws ParserConfigurationException, IOException, SAXException {
         List<RssItem> items = new ArrayList<>();
 
         Document document = fillTheDocument();
@@ -77,10 +78,16 @@ public class RssParser {
 
     }
 
+
     private String getTagValue(Element parent, String tagName) {
         NodeList nodes = parent.getElementsByTagName(tagName);
-        if (nodes.getLength() == 0)
+        if (nodes.getLength() == 0) {
             return null;
+        }
+
+        if(Objects.equals(tagName, "description")) {
+            return removeIllegalCharInDescription(nodes.item(0).getTextContent());
+        }
 
         return nodes.item(0).getTextContent().trim();
     }
@@ -94,6 +101,27 @@ public class RssParser {
 
         return values;
     }
+
+
+    private String removeIllegalCharInDescription(String value) {
+        return value
+                .replace("[&#8230;]", " ")
+                .replace("&#160;", " ");
+    }
+
+    private CharSequence removeIllegalCharInUrl(String value) {
+        return value
+                .replace("&#038", "&")
+                .replace("&amp", "&");
+    }
+
+    private String removeParams(String imgUrl) {
+        return imgUrl.substring(0, imgUrl.lastIndexOf('?') != -1 ?
+                imgUrl.lastIndexOf('?') :
+                imgUrl.length()
+        );
+    }
+
 
     private String extractImgPath(Element itemElement) {
         String imgPath;
@@ -137,7 +165,7 @@ public class RssParser {
 
     private String imgEncodedExt(String value) {
         Matcher matcher = Pattern.compile("<img[^>]+src=\"([^\"]+)\"")
-                .matcher(RemoveIllegalChar(value));
+                .matcher(removeIllegalCharInUrl(value));
 
         return matcher.find() ?
                 matcher.group(1) :
@@ -153,18 +181,10 @@ public class RssParser {
         );
     }
 
-    private String removeParams(String imgUrl) {
-        return imgUrl.substring(0, imgUrl.lastIndexOf('?') != -1 ?
-                imgUrl.lastIndexOf('?') :
-                imgUrl.length()
-        );
+    public String giveBackImgExt() {
+        return imgExtension;
     }
 
-    private CharSequence RemoveIllegalChar(String value) {
-        return value
-                .replace("&#038", "&")
-                .replace("&amp", "&");
-    }
 
     private boolean isValid(String imgUrl) {
         String extension = extractExtension(imgUrl);
@@ -172,7 +192,4 @@ public class RssParser {
         return extension.contains("jpg") || extension.contains("jpeg") || extension.contains("png");
     }
 
-    public String giveBackImgExt() {
-        return imgExtension;
-    }
 }

@@ -59,9 +59,25 @@ public class RssImportService {
     }
 
     public int importFrom(RssSource source) throws ParserConfigurationException, IOException, SAXException, SQLException {
-        RssParser parser = new RssParser(source);
+        List<Callable<ParsedItem>> tasks = getCallables(source);
 
+        List<ParsedItem> parsed = new ArrayList<>();
+        try(ExecutorService pool = Executors.newFixedThreadPool(5)) {
+            for(Future<ParsedItem> items : pool.invokeAll(tasks)) {
+                parsed.add(items.get());
+            }
+        }
+        catch (Exception exception) {
+            //ignore
+        }
+
+        return exportToDB(parsed);
+    }
+
+    private List<Callable<ParsedItem>> getCallables(RssSource source) throws ParserConfigurationException, IOException, SAXException {
         List<Callable<ParsedItem>> tasks = new ArrayList<>();
+
+        RssParser parser = new RssParser(source);
         for (RssItem item : parser.parseItems()) {
             tasks.add(() ->
                     mapper.map(
@@ -74,19 +90,14 @@ public class RssImportService {
                     )
             );
         }
-
-        List<ParsedItem> parsed = new ArrayList<>();
-        try(ExecutorService pool = Executors.newFixedThreadPool(5)) {
-            for(Future<ParsedItem> items : pool.invokeAll(tasks)) {
-                parsed.add(items.get());
-            }
-        }
-        catch (Exception exception) {
-            System.out.println("Error occurred wile downloading image, image was rejected. (Error is ignorable)");
-        }
-
-        return exportToDB(parsed);
+        return tasks;
     }
+
+
+    public RssSource[] getAllSources() {
+        return allSources;
+    }
+
 
     private int exportToDB(List<ParsedItem> parsed) throws SQLException {
         int sumOfImports = 0;
@@ -125,9 +136,5 @@ public class RssImportService {
         }
 
         return sumOfImports;
-    }
-
-    public RssSource[] getAllSources() {
-        return allSources;
     }
 }

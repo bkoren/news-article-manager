@@ -54,7 +54,7 @@ public class CategoryPanel extends BasePanel<Category> {
                 DialogUtils.showError(this, "No category selected. Please select category.");
             }
             catch (NullPointerException exception) {
-                return;
+                //ignore;
             }
         });
 
@@ -72,7 +72,7 @@ public class CategoryPanel extends BasePanel<Category> {
                 DialogUtils.showError(this, "No category selected. Please select category.");
             }
             catch (NullPointerException exception) {
-                return;
+                //ignore;
             }
         }));
     }
@@ -181,7 +181,7 @@ public class CategoryPanel extends BasePanel<Category> {
             if(displayTable != null) {
                 displayTable.setVisible(false);
             }
-            displayMainMessage("No available content.");
+            displayMainMessage("No available categories.");
             return;
         }
 

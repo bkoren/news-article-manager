@@ -58,10 +58,15 @@ public class BasePanel<T extends SearchParams>  extends JPanel {
         header.setDefaultRenderer((t, value, sel, focus, row, col) -> {
             Component component = original.getTableCellRendererComponent(t, value, sel, focus, row, col);
             if (component instanceof JLabel label) {
-                int alignment = switch (col) {
-                    case 1  -> SwingConstants.CENTER;
-                    default -> SwingConstants.LEFT;
-                };
+                int alignment;
+
+                if (col == 1) {
+                    alignment = SwingConstants.CENTER;
+                }
+                else {
+                    alignment = SwingConstants.LEFT;
+                }
+
                 label.setHorizontalAlignment(alignment);
             }
             return component;

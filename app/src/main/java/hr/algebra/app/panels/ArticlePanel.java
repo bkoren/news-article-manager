@@ -2,8 +2,6 @@ package hr.algebra.app.panels;
 
 import hr.algebra.dao.exceptions.AssetException;
 import hr.algebra.dao.models.Article;
-import hr.algebra.dao.models.Category;
-import hr.algebra.dao.models.Source;
 import hr.algebra.dao.repositories.article.ArticleRepositoryImpl;
 import hr.algebra.utilities.gui.DialogUtils;
 
@@ -11,19 +9,8 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-import javax.xml.bind.annotation.XmlRootElement;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.io.File;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.sql.SQLException;
-import java.util.Optional;
 
 public class ArticlePanel extends BasePanel<Article> {
     private final ArticleRepositoryImpl articleRepository;
@@ -94,9 +81,7 @@ public class ArticlePanel extends BasePanel<Article> {
     }
 
     private void buildEvents() {
-        searchBtn.addActionListener(event -> {
-            searchArticleLogic();
-        });
+        searchBtn.addActionListener(event -> searchArticleLogic());
 
         deleteBtn.addActionListener(event -> {
             try {
@@ -108,7 +93,7 @@ public class ArticlePanel extends BasePanel<Article> {
                 DialogUtils.showError(this, "No article selected. Please select an article");
             }
             catch (NullPointerException exception) {
-                return;
+                // ignore;
             }
         });
 
@@ -122,13 +107,11 @@ public class ArticlePanel extends BasePanel<Article> {
                 DialogUtils.showError(this, "No article selected. Please select an article");
             }
             catch (NullPointerException exception) {
-                return;
+                // ignore;
             }
         });
 
-        newBtn.addActionListener(event -> {
-            newArticleLogic();
-        });
+        newBtn.addActionListener(event -> newArticleLogic());
 
         editBtn.addActionListener(event -> {
             try {
@@ -140,7 +123,7 @@ public class ArticlePanel extends BasePanel<Article> {
                 DialogUtils.showError(this, "No article selected. Please select an article");
             }
             catch (NullPointerException exception) {
-                return;
+                // ignore;
             }
         });
     }
@@ -172,7 +155,7 @@ public class ArticlePanel extends BasePanel<Article> {
         content.add(bottomContent, BorderLayout.SOUTH);
 
         newArticleDialog.add(content, BorderLayout.CENTER);
-;       newArticleDialog.setVisible(true);
+        newArticleDialog.setVisible(true);
     }
 
     private void viewArticleLogic(int articleId) {
@@ -237,7 +220,7 @@ public class ArticlePanel extends BasePanel<Article> {
             if(displayTable != null) {
                 displayTable.setVisible(false);
             }
-            displayMainMessage("No available content.");
+            displayMainMessage("No available articles.");
             return;
         }
 
