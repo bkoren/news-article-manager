@@ -50,6 +50,9 @@ public class Author implements SearchParams {
 
     @Override
     public String toString() {
-        return name;
+        return "Author{" +
+                "authorId='" + authorId + '\'' +
+                ", name=" + name +
+                '}';
     }
 }

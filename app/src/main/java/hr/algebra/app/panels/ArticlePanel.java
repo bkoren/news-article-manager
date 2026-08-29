@@ -133,9 +133,23 @@ public class ArticlePanel extends BasePanel<Article> {
         Article selectedArticle = getSelectedArticle(articleId);
         assert selectedArticle != null;
 
-        JDialog newArticleDialog = new BaseDialog("Edit article");
+        BaseDialog editArticleDialog = new BaseDialog(null, "Edit article");
 
-        newArticleDialog.setVisible(true);
+        JPanel leftColumn = editArticleDialog.buildLeftColumn();
+        JPanel rightColumn = editArticleDialog.buildRightColumn();
+
+        JPanel columns = new JPanel(new GridLayout(1, 2, 5, 0));
+        columns.add(leftColumn);
+        columns.add(rightColumn);
+
+        JPanel bottomContent = editArticleDialog.buildBottomContent();
+
+        JPanel content = new JPanel(new BorderLayout(0, 5));
+        content.add(columns, BorderLayout.CENTER);
+        content.add(bottomContent, BorderLayout.SOUTH);
+
+        editArticleDialog.add(content, BorderLayout.CENTER);
+        editArticleDialog.setVisible(true);
     }
 
     private void newArticleLogic() {

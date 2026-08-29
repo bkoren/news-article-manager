@@ -6,6 +6,8 @@ import hr.algebra.dao.models.Category;
 import hr.algebra.dao.models.Source;
 import hr.algebra.dao.repositories.article.ArticleRepositoryImpl;
 import hr.algebra.dao.repositories.author.AuthorRepositoryImpl;
+import hr.algebra.dao.repositories.category.CategoryRepositoryImpl;
+import hr.algebra.dao.repositories.source.SourceRepositoryImpl;
 import hr.algebra.utilities.gui.DialogUtils;
 
 import javax.swing.*;
@@ -27,6 +29,10 @@ import java.sql.SQLException;
 public class BaseDialog extends JDialog {
     private ArticleRepositoryImpl articleRepository;
 
+    private SourceRepositoryImpl   sourceRepository;
+    private CategoryRepositoryImpl categoryRepository;
+    private AuthorRepositoryImpl   authorRepository;
+
     private Article article;
 
     private final int DIALOG_WIDTH;
@@ -39,21 +45,21 @@ public class BaseDialog extends JDialog {
     private JButton             addImgBtn;
     private JTextField          titleInput;
     private JTextArea           descriptionInput;
-    private JComboBox<Category> categoriesInput;
+    private JComboBox<Author>   authorInput;
     private JComboBox<Source>   sourcesInput;
     private JButton             addAuthorBtn;
     private JButton             removeAuthorBtn;
 
-    private DefaultListModel<Author> chosenAuthorsModel;
-    private DefaultListModel<Author> selectAuthorsModel;
+    private DefaultListModel<Category> chosenCategoriesModel;
+    private DefaultListModel<Category> selectCategoriesModel;
 
-    private JList<Author> chosenAuthors;
-    private JList<Author> selectAuthors;
+    private JList<Category> chosenCategories;
+    private JList<Category> selectCategories;
 
     protected BaseDialog(Article selectedArticle, String dialogTitle) {
         this.article = selectedArticle;
 
-        DIALOG_HEIGHT = 640;
+        DIALOG_HEIGHT = 620;
         DIALOG_WIDTH  = 600;
 
         this.setTitle(dialogTitle);
@@ -117,7 +123,7 @@ public class BaseDialog extends JDialog {
                 article.getSource().getName() + "  |  " +
                         article.getPublishedAt().toString().replaceFirst("T", " ") + "  |  " +
                         (!article.getAuthors().isEmpty()
-                                ? (String.join(" | ", article.getAuthors().toString().replace("[", "").replace("]", "")))
+                                ? (String.join(" | ",(article.getAuthors().stream().map(Author::getName).toList())))
                                 : "No author available."
                         )
         );
@@ -218,6 +224,7 @@ public class BaseDialog extends JDialog {
         return result;
     }
 
+
     public JPanel buildLeftColumn() {
         JPanel result = new JPanel();
         result.setBorder(BorderFactory.createEmptyBorder(5,10,5,5));
@@ -259,15 +266,70 @@ public class BaseDialog extends JDialog {
 
         sourcesInput = new JComboBox<>();
         sourcesInput.setAlignmentX(Component.LEFT_ALIGNMENT);
+        sourcesInput.setFont(sourcesInput.getFont().deriveFont(14f));
         sourcesInput.setMaximumSize(new Dimension(Integer.MAX_VALUE, sourcesInput.getPreferredSize().height));
+        try {
+            sourceRepository = new SourceRepositoryImpl();
+            sourceRepository.read().forEach(source -> sourcesInput.addItem(source));
+        }
+        catch (SQLException exception) {
+            sourcesInput.removeAllItems();
+            sourcesInput.setEnabled(false);
 
-        JLabel categoriesLabel = new JLabel("Categories");
+            DialogUtils.showError(this, "Error occurred, sources can't be shown!");
+        }
+        sourcesInput.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(
+                    JList<?> list,
+                    Object value,
+                    int index,
+                    boolean isSelected,
+                    boolean cellHasFocus) {
+
+                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                if (value instanceof Source source) {
+                    setText(source.getName());
+                }
+                return this;
+            }
+        });
+
+
+        JLabel categoriesLabel = new JLabel("Author");
         categoriesLabel.setFont(categoriesLabel.getFont().deriveFont(16f));
         categoriesLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        categoriesInput = new JComboBox<>();
-        categoriesInput.setAlignmentX(Component.LEFT_ALIGNMENT);
-        categoriesInput.setMaximumSize(new Dimension(Integer.MAX_VALUE, categoriesInput.getPreferredSize().height));
+        authorInput = new JComboBox<>();
+        authorInput.setAlignmentX(Component.LEFT_ALIGNMENT);
+        authorInput.setFont(authorInput.getFont().deriveFont(14f));
+        authorInput.setMaximumSize(new Dimension(Integer.MAX_VALUE, authorInput.getPreferredSize().height));
+        try {
+            authorRepository = new AuthorRepositoryImpl();
+            authorRepository.read().forEach(author -> authorInput.addItem(author));
+        }
+        catch (SQLException exception) {
+            authorInput.removeAllItems();
+            authorInput.setEnabled(false);
+
+            DialogUtils.showError(this, "Error occurred, categories can't be shown!");
+        }
+        authorInput.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(
+                    JList<?> list,
+                    Object value,
+                    int index,
+                    boolean isSelected,
+                    boolean cellHasFocus) {
+
+                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                if (value instanceof Author author) {
+                    setText(author.getName());
+                }
+                return this;
+            }
+        });
 
         result.add(imageBox);
         result.add(Box.createVerticalStrut(10));
@@ -283,7 +345,7 @@ public class BaseDialog extends JDialog {
         result.add(sourcesInput);
         result.add(Box.createVerticalStrut(10));
         result.add(categoriesLabel);
-        result.add(categoriesInput);
+        result.add(authorInput);
 
         return result;
     }
@@ -293,33 +355,51 @@ public class BaseDialog extends JDialog {
         result.setBorder(BorderFactory.createEmptyBorder(5,5,5,15));
         result.setLayout(new BoxLayout(result, BoxLayout.Y_AXIS));
 
-        JLabel dropHereLabel = new JLabel("This article's authors - drop here");
+        JLabel dropHereLabel = new JLabel("This article's categories - drop here");
         dropHereLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        chosenAuthorsModel = new DefaultListModel<>();
-        chosenAuthors = new JList<>(chosenAuthorsModel);
-        chosenAuthors.setDragEnabled(true);
-        chosenAuthors.setDropMode(DropMode.INSERT);
+        chosenCategoriesModel = new DefaultListModel<>();
+        chosenCategories = new JList<>(chosenCategoriesModel);
+        chosenCategories.setDragEnabled(true);
+        chosenCategories.setDropMode(DropMode.INSERT);
 
         JLabel arrowUpLabel = new JLabel("▲ drag up");
         arrowUpLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         arrowUpLabel.setForeground(new Color(224, 240, 255));
 
-        JLabel dragFromLabel = new JLabel("Available authors - drag from here");
+        JLabel dragFromLabel = new JLabel("Available categories - drag from here");
         dragFromLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        selectAuthorsModel = new DefaultListModel<>();
+        selectCategoriesModel = new DefaultListModel<>();
         try {
-            new AuthorRepositoryImpl().read().forEach(author -> selectAuthorsModel.addElement(author));
+            categoryRepository = new CategoryRepositoryImpl();
+            categoryRepository.read().forEach(category -> selectCategoriesModel.addElement(category));
         }
         catch (SQLException exception) {
-            selectAuthorsModel.removeAllElements();
+            selectCategoriesModel.removeAllElements();
 
-            DialogUtils.showError(this, "Error occurred, some data can't be shown!");
+            DialogUtils.showError(this, "Error occurred, categories can't be shown!");
         }
-        selectAuthors = new JList<>(selectAuthorsModel);
-        chosenAuthors.setDragEnabled(true);
-        chosenAuthors.setDropMode(DropMode.INSERT);
+        selectCategories = new JList<>(selectCategoriesModel);
+        selectCategories.setDragEnabled(true);
+        selectCategories.setDropMode(DropMode.INSERT);
+        selectCategories.setCellRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(
+                    JList<?> list,
+                    Object value,
+                    int index,
+                    boolean isSelected,
+                    boolean cellHasFocus) {
+
+                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                if(value instanceof Category category) {
+                    setText(category.getName());
+                }
+
+                return this;
+            }
+        });
 
         addAuthorBtn = new JButton("Add ▲");
         removeAuthorBtn = new JButton("Remove ▼");
@@ -331,13 +411,13 @@ public class BaseDialog extends JDialog {
 
         result.add(dropHereLabel);
         result.add(Box.createVerticalStrut(7));
-        result.add(new JScrollPane(chosenAuthors));
+        result.add(new JScrollPane(chosenCategories));
         result.add(Box.createVerticalStrut(7));
         result.add(arrowUpLabel);
         result.add(Box.createVerticalStrut(7));
         result.add(dragFromLabel);
         result.add(Box.createVerticalStrut(7));
-        result.add(new JScrollPane(selectAuthors));
+        result.add(new JScrollPane(selectCategories));
         result.add(Box.createVerticalStrut(7));
         result.add(btnSection);
 
