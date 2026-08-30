@@ -11,8 +11,6 @@ import hr.algebra.dao.repositories.source.SourceRepositoryImpl;
 import hr.algebra.utilities.gui.DialogUtils;
 
 import javax.swing.*;
-import javax.swing.border.BevelBorder;
-import javax.swing.border.EtchedBorder;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
@@ -30,7 +28,6 @@ import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 
 public class BaseDialog extends JDialog {
@@ -47,20 +44,21 @@ public class BaseDialog extends JDialog {
 
     private JLabel imageBox;
 
-    private JButton             addImgBtn;
-    private JTextField          titleInput;
-    private JTextField          linkInput;
-    private JTextArea           descriptionInput;
-    private JComboBox<Author>   authorInput;
-    private JComboBox<Source>   sourcesInput;
-    private JButton             addAuthorBtn;
-    private JButton             removeAuthorBtn;
-    private JButton             saveBtn;
+    private JButton           addImgBtn;
+    private JTextField        titleInput;
+    private JTextField        linkInput;
+    private JTextArea         descriptionInput;
+    private JComboBox<Author> authorInput;
+    private JComboBox<Source> sourcesInput;
+    private JButton           addCategoryBtn;
+    private JButton           removeCategoryBtn;
+    private JButton           saveBtn;
 
-    private final DefaultListModel<Category> chosenCategoriesModel = new DefaultListModel<>();
-    private final DefaultListModel<Category> selectCategoriesModel = new DefaultListModel<>();
+    private final DefaultListModel<Category> targetCategoriesModel = new DefaultListModel<>();
+    private final DefaultListModel<Category> startCategoriesModel = new DefaultListModel<>();
 
-    private JList<Category> chosenCategories;
+    private JList<Category> targetCategories;
+    private JList<Category> startCategories;
 
     protected BaseDialog(ArticleRepositoryImpl articleRepository, Article selectedArticle, String dialogTitle) {
         this.articleRepository = articleRepository;
@@ -337,7 +335,8 @@ public class BaseDialog extends JDialog {
         JLabel dropHereLabel = new JLabel("This article's categories - drop here");
         dropHereLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        chosenCategories = buildCategoryJList(chosenCategoriesModel);
+        targetCategories = buildCategoryJList(targetCategoriesModel);
+        buildTargetEvents();
 
         JLabel arrowUpLabel = new JLabel("▲ drag up");
         arrowUpLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -348,31 +347,49 @@ public class BaseDialog extends JDialog {
 
         try {
             categoryRepository = new CategoryRepositoryImpl();
-            categoryRepository.read().forEach(selectCategoriesModel::addElement);
+            categoryRepository.read().forEach(startCategoriesModel::addElement);
         }
         catch (SQLException exception) {
-            selectCategoriesModel.removeAllElements();
+            startCategoriesModel.removeAllElements();
 
             DialogUtils.showError(this, "Error occurred, categories can't be shown!");
         }
-        JList<Category> selectCategories = buildCategoryJList(selectCategoriesModel);
 
-        addAuthorBtn = new JButton("Add ▲");
-        removeAuthorBtn = new JButton("Remove ▼");
+        startCategories = buildCategoryJList(startCategoriesModel);
+        buildStartEvents();
+
+        addCategoryBtn = new JButton("Add ▲");
+        removeCategoryBtn = new JButton("Remove ▼");
+
+        addCategoryBtn.addActionListener(event -> {
+            Category selectedCategory = startCategories.getSelectedValue();
+            if(selectedCategory != null) {
+                targetCategoriesModel.addElement(selectedCategory);
+                startCategoriesModel.removeElement(selectedCategory);
+            }
+        });
+
+        removeCategoryBtn.addActionListener(event -> {
+            Category selectedCategory = targetCategories.getSelectedValue();
+            if(selectedCategory != null) {
+                startCategoriesModel.addElement(selectedCategory);
+                targetCategoriesModel.removeElement(selectedCategory);
+            }
+        });
 
         JPanel btnSection = new JPanel();
-        btnSection.add(addAuthorBtn);
-        btnSection.add(removeAuthorBtn);
+        btnSection.add(addCategoryBtn);
+        btnSection.add(removeCategoryBtn);
 
         result.add(dropHereLabel);
         result.add(Box.createVerticalStrut(7));
-        result.add(new JScrollPane(chosenCategories));
+        result.add(new JScrollPane(targetCategories));
         result.add(Box.createVerticalStrut(7));
         result.add(arrowUpLabel);
         result.add(Box.createVerticalStrut(7));
         result.add(dragFromLabel);
         result.add(Box.createVerticalStrut(7));
-        result.add(new JScrollPane(selectCategories));
+        result.add(new JScrollPane(startCategories));
         result.add(Box.createVerticalStrut(7));
         result.add(btnSection);
 
@@ -418,11 +435,11 @@ public class BaseDialog extends JDialog {
             articleForDB.setAuthors(List.of((Author) authorInput.getSelectedItem()));
         }
 
-        if(!chosenCategoriesModel.isEmpty()) {
+        if(!targetCategoriesModel.isEmpty()) {
             List<Category> categories = new ArrayList<>();
 
-            for(int i = 0; i < chosenCategoriesModel.getSize(); i++) {
-                categories.add(chosenCategoriesModel.get(i));
+            for(int i = 0; i < targetCategoriesModel.getSize(); i++) {
+                categories.add(targetCategoriesModel.get(i));
             }
 
             articleForDB.setCategories(categories);
@@ -457,6 +474,55 @@ public class BaseDialog extends JDialog {
             }
 
         }.execute();
+    }
+
+
+    private void buildStartEvents() {
+        startCategories.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                targetCategories.getSelectionModel().clearSelection();
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                super.mouseReleased(e);
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                super.mouseExited(e);
+            }
+
+            @Override
+            public void mouseDragged(MouseEvent e) {
+                super.mouseDragged(e);
+            }
+        });
+    }
+
+    private void buildTargetEvents() {
+        targetCategories.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                startCategories.getSelectionModel().clearSelection();
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                super.mouseReleased(e);
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                super.mouseExited(e);
+            }
+
+            @Override
+            public void mouseDragged(MouseEvent e) {
+                super.mouseDragged(e);
+            }
+        });
     }
 
 
@@ -610,6 +676,6 @@ public class BaseDialog extends JDialog {
             authorInput.setSelectedItem(article.getAuthors().getFirst());
         }
 
-        article.getCategories().forEach(chosenCategoriesModel::addElement);
+        article.getCategories().forEach(targetCategoriesModel::addElement);
     }
 }
