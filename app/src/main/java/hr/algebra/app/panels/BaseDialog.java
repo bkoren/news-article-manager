@@ -1,5 +1,6 @@
 package hr.algebra.app.panels;
 
+import hr.algebra.dao.exceptions.AssetException;
 import hr.algebra.dao.models.Article;
 import hr.algebra.dao.models.Author;
 import hr.algebra.dao.models.Category;
@@ -8,6 +9,7 @@ import hr.algebra.dao.repositories.article.ArticleRepositoryImpl;
 import hr.algebra.dao.repositories.author.AuthorRepositoryImpl;
 import hr.algebra.dao.repositories.category.CategoryRepositoryImpl;
 import hr.algebra.dao.repositories.source.SourceRepositoryImpl;
+import hr.algebra.dao.rss.AssetService;
 import hr.algebra.utilities.gui.DialogUtils;
 
 import javax.swing.*;
@@ -28,6 +30,7 @@ import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
 public class BaseDialog extends JDialog {
@@ -43,6 +46,7 @@ public class BaseDialog extends JDialog {
     private final int DIALOG_HEIGHT;
 
     private JLabel imageBox;
+    private String selectedImage;
 
     private JButton           addImgBtn;
     private JTextField        titleInput;
@@ -90,6 +94,7 @@ public class BaseDialog extends JDialog {
 
     protected void buildImageBox(int width, int height) {
         imageBox = new JLabel();
+        imageBox.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY, 5));
         imageBox.setPreferredSize(new Dimension(width, height));
 
         String imgPath = (article != null && article.getImagePath() != null) ?
@@ -102,24 +107,37 @@ public class BaseDialog extends JDialog {
         if (!Files.exists(imageFile)) {
             imageBox.setText("Image not found.");
             imageBox.setHorizontalAlignment(SwingUtilities.CENTER);
-
-            this.add(imageBox, BorderLayout.NORTH);
             return;
         }
 
+        displayImg(imageFile, width, height);
+    }
+
+    private void displayImg(Path imageFile, int width, int height) {
         ImageIcon originalImage = new ImageIcon(imageFile.toString());
 
         Image scaledImage = originalImage.getImage()
                 .getScaledInstance(width, height, Image.SCALE_SMOOTH);
 
         imageBox.setIcon(new ImageIcon(scaledImage));
+    }
 
-        this.add(imageBox, BorderLayout.NORTH);
+    private void SaveImg(Path imgPath) {
+        try {
+            AssetService assetService = new AssetService();
+
+            selectedImage = assetService.saveImgToFolder(imgPath).toString();
+        }
+        catch (AssetException | IOException exception) {
+            DialogUtils.showError(this, "Error occurred trying to save image.");
+        }
     }
 
 
     public JPanel buildTopSection() {
         JPanel result = new JPanel();
+
+        buildImageBox(640, 240);
 
         JLabel title = new JLabel(article.getTitle());
         title.setFont(title.getFont().deriveFont(Font.BOLD, 16f));
@@ -136,6 +154,8 @@ public class BaseDialog extends JDialog {
         mainInfo.setFont(title.getFont().deriveFont(Font.ITALIC, 12f));
 
         result.setLayout(new BoxLayout(result, BoxLayout.Y_AXIS));
+        result.add(imageBox);
+        result.add(Box.createVerticalStrut(7));
         result.add(title);
         result.add(Box.createVerticalStrut(7));
         result.add(mainInfo);
@@ -242,6 +262,17 @@ public class BaseDialog extends JDialog {
 
         addImgBtn = new JButton("Add image.");
         addImgBtn.setAlignmentX(Component.LEFT_ALIGNMENT);
+        addImgBtn.addActionListener(event -> {
+            Optional<File> file = DialogUtils.uploadImg(this);
+            if(file.isEmpty()) {
+                return;
+            }
+            Path imgPath = file.map(File::toPath).orElseThrow();
+
+            displayImg(imgPath, 320, 200);
+
+            SaveImg(imgPath);
+        });
 
         JLabel titleLabel = new JLabel("Title");
         titleLabel.setFont(titleLabel.getFont().deriveFont(16f));
@@ -407,11 +438,10 @@ public class BaseDialog extends JDialog {
 
            if(article == null) {
                callRepository(0);
-
-               return;
            }
-
-           callRepository(article.getArticleId());
+           else {
+               callRepository(article.getArticleId());
+           }
         });
 
         result.add(saveBtn);
@@ -427,7 +457,7 @@ public class BaseDialog extends JDialog {
                 descriptionInput.getText().trim(),
                 buildLink(),
                 LocalDateTime.now(),
-                null,
+                selectedImage,
                 (Source) sourcesInput.getSelectedItem()
         );
 
@@ -463,8 +493,9 @@ public class BaseDialog extends JDialog {
                     int operation = get();
 
                     String msg = (operation == 0) ?
-                            "Article successfully created." :
-                            "Article successfully updated.";
+                            "Article successfully updated." :
+                            "Article successfully created.";
+
 
                     DialogUtils.showInfo(BaseDialog.this, msg);
                 }
@@ -645,7 +676,7 @@ public class BaseDialog extends JDialog {
     }
 
     private void exportLogic() {
-        File file = DialogUtils.chooseSaveFile(this, "xml").orElse(null);
+        File file = DialogUtils.saveFile(this, "xml").orElse(null);
         if(file == null) {
             return;
         }

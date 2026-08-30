@@ -38,10 +38,9 @@ public final class DialogUtils {
         return answer == JOptionPane.YES_OPTION;
     }
 
-    public static Optional<File> chooseSaveFile(Component parent, String extension) {
+    public static Optional<File> saveFile(Component parent, String extension) {
         JFileChooser chooser = new JFileChooser();
-        chooser.setDialogTitle("Save file");
-
+        chooser.setDialogTitle("Select file");
         chooser.setFileFilter(new FileNameExtensionFilter(
                 extension.toUpperCase() + " files", extension)
         );
@@ -56,5 +55,22 @@ public final class DialogUtils {
             file = new File(file.getAbsolutePath() + "." + extension);
         }
         return Optional.of(file);
+    }
+
+    public static Optional<File> uploadImg(Component parent) {
+        JFileChooser chooser = new JFileChooser();
+        chooser.setDialogTitle("Choose an image");
+        chooser.setAcceptAllFileFilterUsed(false);
+        chooser.setFileFilter(new FileNameExtensionFilter(
+                "Images (png, jpg)", "png", "jpg", "jpeg"));
+        chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        chooser.setMultiSelectionEnabled(false);
+
+        int result = chooser.showOpenDialog(parent);
+        if (result == JFileChooser.APPROVE_OPTION) {
+            return Optional.of(chooser.getSelectedFile());
+        }
+
+        return Optional.empty();
     }
 }

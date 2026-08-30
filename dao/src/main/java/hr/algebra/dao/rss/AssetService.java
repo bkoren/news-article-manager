@@ -9,10 +9,7 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Objects;
 import java.util.UUID;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class AssetService {
     private final Path FOLDER = Paths.get("assets");
@@ -29,50 +26,20 @@ public class AssetService {
         }
     }
 
-    public void clearFolder() throws AssetException{
-        try(var files = Files.newDirectoryStream(FOLDER)) {
-            for (Path file : files) {
-                if(!file.getFileName().toString().equals("default.jpg")) {
-                    Files.delete(file);
-                }
-            }
-        }
-        catch (IOException exception) {
-            throw new AssetException(
-                    "Failed to clear the assets folder at " + FOLDER
-                    ,exception
-            );
-        }
-    }
-
-    public void removeImage(String imagePath) throws AssetException {
-        if(imagePath == null) {
-            return;
-        }
-
-        Path file = Paths.get(imagePath);
-        try {
-            if(!file.getFileName().toString().equals("default.jpg")) {
-                Files.delete(file);
-            }
-        }
-        catch (IOException exception) {
-            throw new AssetException(
-                    "Failed to delete image at " + imagePath
-                    ,exception
-            );
-        }
-    }
-
-    private String generateId(String imgUrl, String imgExt) {
-        if(imgUrl == null) {
+    private String generateId(String img, String imgExt) {
+        if(img == null) {
             return null;
+        }
+
+        if(imgExt == null) {
+            imgExt = img.substring(img.lastIndexOf('.') + 1);
         }
 
         return UUID.randomUUID().toString().substring(0, 12) + "." + imgExt;
     }
 
-    String downloadImage(String imgUrl, String imgExt) throws IOException {
+
+    public String downloadImage(String imgUrl, String imgExt) throws IOException {
         String id = generateId(imgUrl, imgExt);
         if(id == null)
             return null;
@@ -104,6 +71,50 @@ public class AssetService {
         }
         finally {
             connection.disconnect();
+        }
+    }
+
+    public Path saveImgToFolder(Path imgPath) throws IOException {
+        String id = generateId(imgPath.toString(), null);
+
+        Path target = FOLDER.resolve(id);
+        Files.copy(imgPath, target);
+
+        return target;
+    }
+
+    public void removeImage(String imagePath) throws AssetException {
+        if(imagePath == null) {
+            return;
+        }
+
+        Path file = Paths.get(imagePath);
+        try {
+            if(!file.getFileName().toString().equals("default.jpg")) {
+                Files.delete(file);
+            }
+        }
+        catch (IOException exception) {
+            throw new AssetException(
+                    "Failed to delete image at " + imagePath
+                    ,exception
+            );
+        }
+    }
+
+    public void clearFolder() throws AssetException{
+        try(var files = Files.newDirectoryStream(FOLDER)) {
+            for (Path file : files) {
+                if(!file.getFileName().toString().equals("default.jpg")) {
+                    Files.delete(file);
+                }
+            }
+        }
+        catch (IOException exception) {
+            throw new AssetException(
+                    "Failed to clear the assets folder at " + FOLDER
+                    ,exception
+            );
         }
     }
 }

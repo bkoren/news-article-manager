@@ -181,8 +181,6 @@ public class ArticlePanel extends BasePanel<Article> {
 
         BaseDialog viewArticleDialog = new BaseDialog(null, selectedArticle, "View article");
 
-        viewArticleDialog.buildImageBox(640, 240);
-
         JPanel topSection = viewArticleDialog.buildTopSection();
         JPanel bodySection = viewArticleDialog.buildBodySection();
         JPanel bottomSection = viewArticleDialog.buildBottomSection();
