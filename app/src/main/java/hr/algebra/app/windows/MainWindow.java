@@ -4,15 +4,19 @@ import hr.algebra.app.panels.AdminPanel;
 import hr.algebra.app.panels.ArticlePanel;
 import hr.algebra.app.panels.AuthorPanel;
 import hr.algebra.app.panels.CategoryPanel;
+import hr.algebra.dao.exceptions.AssetException;
 import hr.algebra.dao.models.Role;
 import hr.algebra.dao.models.User;
 import hr.algebra.dao.repositories.article.ArticleRepositoryImpl;
 import hr.algebra.dao.repositories.author.AuthorRepositoryImpl;
 import hr.algebra.dao.repositories.category.CategoryRepositoryImpl;
 import hr.algebra.dao.repositories.source.SourceRepositoryImpl;
+import hr.algebra.dao.rss.RssImportService;
+import hr.algebra.utilities.gui.DialogUtils;
 
 import javax.swing.*;
 import java.awt.*;
+import java.sql.SQLException;
 
 public class MainWindow extends JFrame{
     private final CardLayout containersLayout = new CardLayout();
@@ -36,6 +40,20 @@ public class MainWindow extends JFrame{
                 categoryRepository
         );
 
+        RssImportService importService = new RssImportService(
+                authorRepository,
+                categoryRepository,
+                sourceRepository,
+                articleRepository
+        );
+
+        try {
+            importService.importAllSourcesToDB();
+        }
+        catch (SQLException exception) {
+            DialogUtils.showError(this, "A database error occurred. Application will not work properly.");
+        }
+
         displayContent.add(new ArticlePanel(articleRepository), "articles");
         displayContent.add(new AuthorPanel(authorRepository), "authors");
         displayContent.add(new CategoryPanel(categoryRepository), "categories");
@@ -43,7 +61,8 @@ public class MainWindow extends JFrame{
                 sourceRepository,
                 authorRepository,
                 categoryRepository,
-                articleRepository
+                articleRepository,
+                importService
         ), "admin");
 
         containersLayout.show(displayContent, "articles");

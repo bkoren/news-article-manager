@@ -3,6 +3,7 @@ package hr.algebra.app.panels;
 import hr.algebra.dao.exceptions.AssetException;
 import hr.algebra.dao.models.Article;
 import hr.algebra.dao.repositories.article.ArticleRepositoryImpl;
+import hr.algebra.dao.rss.RssSource;
 import hr.algebra.utilities.gui.DialogUtils;
 
 import javax.swing.*;
@@ -14,6 +15,8 @@ import java.sql.SQLException;
 
 public class ArticlePanel extends BasePanel<Article> {
     private final ArticleRepositoryImpl articleRepository;
+
+
 
     public ArticlePanel(ArticleRepositoryImpl articleRepository) {
         this.articleRepository = articleRepository;

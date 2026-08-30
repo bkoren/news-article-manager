@@ -11,6 +11,7 @@ import hr.algebra.dao.repositories.author.AuthorRepositoryImpl;
 import hr.algebra.dao.repositories.category.CategoryRepository;
 import hr.algebra.dao.repositories.category.CategoryRepositoryImpl;
 import hr.algebra.dao.repositories.source.SourceRepositoryImpl;
+import hr.algebra.utilities.gui.DialogUtils;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -19,16 +20,20 @@ import java.sql.Array;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.*;
 
 public class RssImportService {
     private final RssItemMapper mapper;
-    private final AssetService asset;
+
+    private AssetService asset;
 
     AuthorRepository         authorRepository;
     CategoryRepository       categoryRepository;
     SourceRepositoryImpl     sourceRepository;
     ArticleRepositoryImpl    articleRepository;
+
+    private final List<Source> sources = new ArrayList<>();
 
     private final RssSource[] allSources;
 
@@ -37,9 +42,15 @@ public class RssImportService {
             CategoryRepository    categoryRepository,
             SourceRepositoryImpl  sourceRepository,
             ArticleRepositoryImpl articleRepository
-    ) throws AssetException {
+    )  {
         mapper = new RssItemMapper();
-        asset  = new AssetService();
+
+        try {
+            asset = new AssetService();
+        }
+        catch (AssetException exception) {
+            asset = null;
+        }
 
         this.sourceRepository = sourceRepository;
         this.authorRepository = authorRepository;
@@ -49,7 +60,7 @@ public class RssImportService {
         allSources = RssSource.values();
     }
 
-    public int importFromAll() throws SQLException, ParserConfigurationException, IOException, SAXException, AssetException {
+    public int importFromAll() throws SQLException, ParserConfigurationException, IOException, SAXException {
         int sumOfDownloadedArticles = 0;
         for(RssSource source : allSources) {
             sumOfDownloadedArticles += importFrom(source);
@@ -93,6 +104,25 @@ public class RssImportService {
         return tasks;
     }
 
+    public void importAllSourcesToDB() throws SQLException {
+        for(RssSource source : allSources) {
+            int id = sourceRepository.create(
+                    new Source(
+                            0,
+                            source.getName(),
+                            source.getFeedUrl()
+                    )
+            );
+
+            sources.add(
+                    new Source(
+                            id,
+                            source.getName(),
+                            source.getFeedUrl()
+                    )
+            );
+        }
+    }
 
     public RssSource[] getAllSources() {
         return allSources;
@@ -101,11 +131,12 @@ public class RssImportService {
 
     private int exportToDB(List<ParsedItem> parsed) throws SQLException {
         int sumOfImports = 0;
-        int sourceId = sourceRepository.create(parsed.getFirst().source());
+        Source source = (Source) sources.stream()
+                .filter(s -> Objects.equals(s.getName(), parsed.getFirst().source().getName()));
 
         for (ParsedItem parsedItem : parsed) {
             Article article = parsedItem.article();
-            article.setSourceId(sourceId);
+            article.setSourceId(source.getSourceId());
 
             List<Author> linkedAuthors = new ArrayList<>();
             for (Author author : parsedItem.authors()) {
@@ -136,5 +167,13 @@ public class RssImportService {
         }
 
         return sumOfImports;
+    }
+
+    public boolean isAssetValid() {
+        return asset != null;
+    }
+
+    public boolean isThereAnySource() {
+        return sources.isEmpty();
     }
 }

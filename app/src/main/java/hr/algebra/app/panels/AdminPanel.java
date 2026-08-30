@@ -2,7 +2,6 @@ package hr.algebra.app.panels;
 
 import hr.algebra.app.background.AdminLoadWorker;
 import hr.algebra.app.background.AdminDeleteWorker;
-import hr.algebra.dao.exceptions.AssetException;
 import hr.algebra.dao.models.Source;
 import hr.algebra.dao.repositories.article.ArticleRepositoryImpl;
 import hr.algebra.dao.repositories.author.AuthorRepositoryImpl;
@@ -14,6 +13,7 @@ import hr.algebra.utilities.gui.DialogUtils;
 
 import javax.swing.*;
 import java.awt.*;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
@@ -22,7 +22,7 @@ import java.util.Objects;
 public class AdminPanel extends JPanel {
     private final JPanel stack = new JPanel();
 
-    private RssImportService importService;
+    private final RssImportService importService;
 
     private AdminDeleteWorker adminDeleteWorker;
 
@@ -53,23 +53,17 @@ public class AdminPanel extends JPanel {
             SourceRepositoryImpl sourceRepository,
             AuthorRepositoryImpl authorRepository,
             CategoryRepositoryImpl categoryRepository,
-            ArticleRepositoryImpl articleRepository
+            ArticleRepositoryImpl articleRepository,
+            RssImportService importService
     ) {
         this.sourceRepository = sourceRepository;
         this.articleRepository = articleRepository;
         this.authorRepository = authorRepository;
         this.categoryRepository = categoryRepository;
+        this.importService = importService;
 
-        try {
-            importService = new RssImportService(
-                    authorRepository,
-                    categoryRepository,
-                    sourceRepository,
-                    articleRepository
-                    );
-        }
-        catch (AssetException exception) {
-            DialogUtils.showError(this, exception.getMessage());
+        if(!importService.isAssetValid()) {
+            DialogUtils.showError(this, "Unable to create folder, Images will not be stored.");
         }
 
         buildUi();
@@ -217,7 +211,7 @@ public class AdminPanel extends JPanel {
             setStatusMsg(statusReloadSources, "Downloading..", null);
             clearLabelsOfOtherCards(statusReloadSources);
 
-            reloadSourcesLogic();
+            reloadSourcesLogic(statusReloadSources);
 
             setStatusMsg(statusReloadSources, "Successfully reloaded sources.", Color.GREEN);
         });
@@ -429,12 +423,21 @@ public class AdminPanel extends JPanel {
         }
     }
 
-    private void reloadSourcesLogic() {
+    private void reloadSourcesLogic(JLabel statusReloadSources) {
         for(DefaultComboBoxModel<RssSource> jComboBox : listOfJComboBoxes) {
             jComboBox.removeAllElements();
             jComboBox.addAll(List.of(importService.getAllSources()));
 
             jComboBox.setSelectedItem(jComboBox.getElementAt(0));
+        }
+
+        if(!importService.isThereAnySource()) {
+            try {
+                importService.importAllSourcesToDB();
+            }
+            catch (SQLException exception) {
+                setStatusMsg(statusReloadSources, "Error occurred.", Color.RED);
+            }
         }
 
         threadBusy = false;

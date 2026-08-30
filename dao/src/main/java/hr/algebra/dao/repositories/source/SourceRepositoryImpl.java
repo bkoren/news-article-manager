@@ -33,7 +33,7 @@ public class SourceRepositoryImpl extends BaseRepository<Source> implements Sour
         }
 
         return executeInsert(
-                "{call p_Source_Create (?, ?)}",
+                "{call p_Source_Create(?, ?)}",
                 statement -> {
                     statement.setString(1, source.getName());
                     statement.setString(2, source.getFeedUrl());
