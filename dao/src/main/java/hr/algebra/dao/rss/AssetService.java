@@ -9,6 +9,7 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -31,7 +32,9 @@ public class AssetService {
     public void clearFolder() throws AssetException{
         try(var files = Files.newDirectoryStream(FOLDER)) {
             for (Path file : files) {
-                Files.delete(file);
+                if(!file.getFileName().toString().equals("default.jpg")) {
+                    Files.delete(file);
+                }
             }
         }
         catch (IOException exception) {
@@ -49,7 +52,9 @@ public class AssetService {
 
         Path file = Paths.get(imagePath);
         try {
-            Files.delete(file);
+            if(!file.getFileName().toString().equals("default.jpg")) {
+                Files.delete(file);
+            }
         }
         catch (IOException exception) {
             throw new AssetException(

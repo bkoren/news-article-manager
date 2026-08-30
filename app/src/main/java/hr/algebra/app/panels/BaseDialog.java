@@ -11,6 +11,8 @@ import hr.algebra.dao.repositories.source.SourceRepositoryImpl;
 import hr.algebra.utilities.gui.DialogUtils;
 
 import javax.swing.*;
+import javax.swing.border.BevelBorder;
+import javax.swing.border.EtchedBorder;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
@@ -25,6 +27,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.ExecutionException;
 
 public class BaseDialog extends JDialog {
     private ArticleRepositoryImpl articleRepository;
@@ -38,25 +45,25 @@ public class BaseDialog extends JDialog {
     private final int DIALOG_WIDTH;
     private final int DIALOG_HEIGHT;
 
-    private final String IMAGE_FOLDER = "assets";
-
-    private JLabel    imageBox;
+    private JLabel imageBox;
 
     private JButton             addImgBtn;
     private JTextField          titleInput;
+    private JTextField          linkInput;
     private JTextArea           descriptionInput;
     private JComboBox<Author>   authorInput;
     private JComboBox<Source>   sourcesInput;
     private JButton             addAuthorBtn;
     private JButton             removeAuthorBtn;
+    private JButton             saveBtn;
 
-    private DefaultListModel<Category> chosenCategoriesModel;
-    private DefaultListModel<Category> selectCategoriesModel;
+    private final DefaultListModel<Category> chosenCategoriesModel = new DefaultListModel<>();
+    private final DefaultListModel<Category> selectCategoriesModel = new DefaultListModel<>();
 
     private JList<Category> chosenCategories;
-    private JList<Category> selectCategories;
 
-    protected BaseDialog(Article selectedArticle, String dialogTitle) {
+    protected BaseDialog(ArticleRepositoryImpl articleRepository, Article selectedArticle, String dialogTitle) {
+        this.articleRepository = articleRepository;
         this.article = selectedArticle;
 
         DIALOG_HEIGHT = 620;
@@ -85,20 +92,20 @@ public class BaseDialog extends JDialog {
 
     protected void buildImageBox(int width, int height) {
         imageBox = new JLabel();
-
-        imageBox.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY, 10, true));
         imageBox.setPreferredSize(new Dimension(width, height));
 
-        if (article == null || article.getImagePath() == null) {
-            imageBox.setText("No image available.");
-            return;
-        }
+        String imgPath = (article != null && article.getImagePath() != null) ?
+                article.getImagePath() :
+                "assets\\default.jpg";
 
-        Path imageFile = Paths.get(IMAGE_FOLDER)
-                .resolve(Paths.get(article.getImagePath()).getFileName());
+        Path imageFile = Paths.get("assets")
+                .resolve(Paths.get(imgPath).getFileName());
 
         if (!Files.exists(imageFile)) {
             imageBox.setText("Image not found.");
+            imageBox.setHorizontalAlignment(SwingUtilities.CENTER);
+
+            this.add(imageBox, BorderLayout.NORTH);
             return;
         }
 
@@ -198,7 +205,7 @@ public class BaseDialog extends JDialog {
             public void mouseClicked(MouseEvent event) {
                 if (!Desktop.isDesktopSupported()
                         || !Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
-                    DialogUtils.showError(BaseDialog.super.getParent(),
+                    DialogUtils.showError(BaseDialog.this,
                             "Opening a browser is not supported on this system.");
                     return;
                 }
@@ -207,7 +214,7 @@ public class BaseDialog extends JDialog {
                     Desktop.getDesktop().browse(new URI(article.getLink()));
                 }
                 catch (IOException | URISyntaxException | IllegalArgumentException exception) {
-                    DialogUtils.showError(BaseDialog.super.getParent(),
+                    DialogUtils.showError(BaseDialog.this,
                             "Could not open the link in the browser.");
                 }
             }
@@ -246,6 +253,14 @@ public class BaseDialog extends JDialog {
         titleInput.setAlignmentX(Component.LEFT_ALIGNMENT);
         titleInput.setMaximumSize(new Dimension(Integer.MAX_VALUE, titleInput.getPreferredSize().height));
 
+        JLabel linkLabel = new JLabel("Link");
+        linkLabel.setFont(titleLabel.getFont().deriveFont(16f));
+        linkLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        linkInput = new JTextField();
+        linkInput.setAlignmentX(Component.LEFT_ALIGNMENT);
+        linkInput.setMaximumSize(new Dimension(Integer.MAX_VALUE, titleInput.getPreferredSize().height));
+
         JLabel descriptionLabel = new JLabel("Description");
         descriptionLabel.setFont(descriptionLabel.getFont().deriveFont(16f));
         descriptionLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -264,13 +279,10 @@ public class BaseDialog extends JDialog {
         sourceLabel.setFont(sourceLabel.getFont().deriveFont(16f));
         sourceLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        sourcesInput = new JComboBox<>();
-        sourcesInput.setAlignmentX(Component.LEFT_ALIGNMENT);
-        sourcesInput.setFont(sourcesInput.getFont().deriveFont(14f));
-        sourcesInput.setMaximumSize(new Dimension(Integer.MAX_VALUE, sourcesInput.getPreferredSize().height));
         try {
             sourceRepository = new SourceRepositoryImpl();
-            sourceRepository.read().forEach(source -> sourcesInput.addItem(source));
+
+            sourcesInput = buildJComboBox(sourceRepository.read());
         }
         catch (SQLException exception) {
             sourcesInput.removeAllItems();
@@ -278,58 +290,22 @@ public class BaseDialog extends JDialog {
 
             DialogUtils.showError(this, "Error occurred, sources can't be shown!");
         }
-        sourcesInput.setRenderer(new DefaultListCellRenderer() {
-            @Override
-            public Component getListCellRendererComponent(
-                    JList<?> list,
-                    Object value,
-                    int index,
-                    boolean isSelected,
-                    boolean cellHasFocus) {
 
-                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-                if (value instanceof Source source) {
-                    setText(source.getName());
-                }
-                return this;
-            }
-        });
+        JLabel authorsLabel = new JLabel("Author");
+        authorsLabel.setFont(authorsLabel.getFont().deriveFont(16f));
+        authorsLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-
-        JLabel categoriesLabel = new JLabel("Author");
-        categoriesLabel.setFont(categoriesLabel.getFont().deriveFont(16f));
-        categoriesLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        authorInput = new JComboBox<>();
-        authorInput.setAlignmentX(Component.LEFT_ALIGNMENT);
-        authorInput.setFont(authorInput.getFont().deriveFont(14f));
-        authorInput.setMaximumSize(new Dimension(Integer.MAX_VALUE, authorInput.getPreferredSize().height));
         try {
             authorRepository = new AuthorRepositoryImpl();
-            authorRepository.read().forEach(author -> authorInput.addItem(author));
+
+            authorInput = buildJComboBox(authorRepository.read());
         }
         catch (SQLException exception) {
             authorInput.removeAllItems();
             authorInput.setEnabled(false);
 
-            DialogUtils.showError(this, "Error occurred, categories can't be shown!");
+            DialogUtils.showError(this, "Error occurred, authors can't be shown!");
         }
-        authorInput.setRenderer(new DefaultListCellRenderer() {
-            @Override
-            public Component getListCellRendererComponent(
-                    JList<?> list,
-                    Object value,
-                    int index,
-                    boolean isSelected,
-                    boolean cellHasFocus) {
-
-                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-                if (value instanceof Author author) {
-                    setText(author.getName());
-                }
-                return this;
-            }
-        });
 
         result.add(imageBox);
         result.add(Box.createVerticalStrut(10));
@@ -338,13 +314,16 @@ public class BaseDialog extends JDialog {
         result.add(titleLabel);
         result.add(titleInput);
         result.add(Box.createVerticalStrut(10));
+        result.add(linkLabel);
+        result.add(linkInput);
+        result.add(Box.createVerticalStrut(10));
         result.add(descriptionLabel);
         result.add(descriptionScrollInput);
         result.add(Box.createVerticalStrut(10));
         result.add(sourceLabel);
         result.add(sourcesInput);
         result.add(Box.createVerticalStrut(10));
-        result.add(categoriesLabel);
+        result.add(authorsLabel);
         result.add(authorInput);
 
         return result;
@@ -358,10 +337,7 @@ public class BaseDialog extends JDialog {
         JLabel dropHereLabel = new JLabel("This article's categories - drop here");
         dropHereLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        chosenCategoriesModel = new DefaultListModel<>();
-        chosenCategories = new JList<>(chosenCategoriesModel);
-        chosenCategories.setDragEnabled(true);
-        chosenCategories.setDropMode(DropMode.INSERT);
+        chosenCategories = buildCategoryJList(chosenCategoriesModel);
 
         JLabel arrowUpLabel = new JLabel("▲ drag up");
         arrowUpLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -370,36 +346,16 @@ public class BaseDialog extends JDialog {
         JLabel dragFromLabel = new JLabel("Available categories - drag from here");
         dragFromLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        selectCategoriesModel = new DefaultListModel<>();
         try {
             categoryRepository = new CategoryRepositoryImpl();
-            categoryRepository.read().forEach(category -> selectCategoriesModel.addElement(category));
+            categoryRepository.read().forEach(selectCategoriesModel::addElement);
         }
         catch (SQLException exception) {
             selectCategoriesModel.removeAllElements();
 
             DialogUtils.showError(this, "Error occurred, categories can't be shown!");
         }
-        selectCategories = new JList<>(selectCategoriesModel);
-        selectCategories.setDragEnabled(true);
-        selectCategories.setDropMode(DropMode.INSERT);
-        selectCategories.setCellRenderer(new DefaultListCellRenderer() {
-            @Override
-            public Component getListCellRendererComponent(
-                    JList<?> list,
-                    Object value,
-                    int index,
-                    boolean isSelected,
-                    boolean cellHasFocus) {
-
-                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-                if(value instanceof Category category) {
-                    setText(category.getName());
-                }
-
-                return this;
-            }
-        });
+        JList<Category> selectCategories = buildCategoryJList(selectCategoriesModel);
 
         addAuthorBtn = new JButton("Add ▲");
         removeAuthorBtn = new JButton("Remove ▼");
@@ -407,7 +363,6 @@ public class BaseDialog extends JDialog {
         JPanel btnSection = new JPanel();
         btnSection.add(addAuthorBtn);
         btnSection.add(removeAuthorBtn);
-
 
         result.add(dropHereLabel);
         result.add(Box.createVerticalStrut(7));
@@ -427,12 +382,143 @@ public class BaseDialog extends JDialog {
     public JPanel buildBottomContent() {
         JPanel result = new JPanel(new FlowLayout(FlowLayout.RIGHT, 5, 5));
 
-        JButton saveBtn = new JButton("Save");
+        saveBtn = new JButton("Save");
+        saveBtn.addActionListener(event -> {
+           if(!ValidateInputs()) {
+               return;
+           }
+
+           if(article == null) {
+               callRepository(0);
+
+               return;
+           }
+
+           callRepository(article.getArticleId());
+        });
+
         result.add(saveBtn);
 
         return result;
     }
 
+
+    private void callRepository(int articleId) {
+        Article articleForDB = new Article(
+                articleId,
+                titleInput.getText(),
+                descriptionInput.getText().trim(),
+                buildLink(),
+                LocalDateTime.now(),
+                null,
+                (Source) sourcesInput.getSelectedItem()
+        );
+
+        if(authorInput.getSelectedItem() != null) {
+            articleForDB.setAuthors(List.of((Author) authorInput.getSelectedItem()));
+        }
+
+        if(!chosenCategoriesModel.isEmpty()) {
+            List<Category> categories = new ArrayList<>();
+
+            for(int i = 0; i < chosenCategoriesModel.getSize(); i++) {
+                categories.add(chosenCategoriesModel.get(i));
+            }
+
+            articleForDB.setCategories(categories);
+        }
+
+        new SwingWorker<Integer, String>() {
+            @Override
+            protected Integer doInBackground() throws Exception {
+                if(articleForDB.getArticleId() == 0) {
+                     return articleRepository.create(articleForDB);
+                }
+
+                articleRepository.update(articleForDB);
+
+                return 0;
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    int operation = get();
+
+                    String msg = (operation == 0) ?
+                            "Article successfully created." :
+                            "Article successfully updated.";
+
+                    DialogUtils.showInfo(BaseDialog.this, msg);
+                }
+                catch (ExecutionException | InterruptedException e) {
+                    DialogUtils.showInfo(BaseDialog.this, "Unknown error occurred. ");
+                }
+            }
+
+        }.execute();
+    }
+
+
+    private <T> JComboBox<T> buildJComboBox(List<T> items) {
+        JComboBox<T> result = new JComboBox<>();
+        result.setAlignmentX(Component.LEFT_ALIGNMENT);
+        result.setFont(result.getFont().deriveFont(14f));
+        result.setMaximumSize(new Dimension(Integer.MAX_VALUE, result.getPreferredSize().height));
+
+        items.forEach(result::addItem);
+
+        result.setSelectedItem(null);
+        result.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(
+                    JList<?> list,
+                    Object value,
+                    int index,
+                    boolean isSelected,
+                    boolean cellHasFocus) {
+
+                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                if (value instanceof Source source) {
+                    setText(source.getName());
+                }
+
+                if (value instanceof Author author) {
+                    setText(author.getName());
+                }
+
+                return this;
+            }
+        });
+
+        return result;
+    }
+
+    private JList<Category> buildCategoryJList(DefaultListModel<Category> model) {
+        JList<Category> result = new JList<>(model);
+        result.setDragEnabled(true);
+        result.setDropMode(DropMode.INSERT);
+        result.setVisibleRowCount(15);
+        result.setCellRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(
+                    JList<?> list,
+                    Object value,
+                    int index,
+                    boolean isSelected,
+                    boolean cellHasFocus) {
+
+                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                if(value instanceof Category category) {
+                    setText(category.getName());
+                }
+
+                return this;
+            }
+        });
+
+        return result;
+    }
 
     private JLabel buildCategoryChip(Category category) {
         JLabel chip = new JLabel(category.getName()) {
@@ -462,6 +548,36 @@ public class BaseDialog extends JDialog {
         return chip;
     }
 
+    private String buildLink() {
+        String result = linkInput.getText().trim();
+
+        if(!result.startsWith("https://")) {
+            return "https://" + result;
+        }
+
+        return result;
+    }
+
+
+    private boolean ValidateInputs() {
+        if(titleInput.getText().isEmpty()) {
+            DialogUtils.showError(this, "Title can't be empty!");
+            return false;
+        }
+
+        if(linkInput.getText().isEmpty()) {
+            DialogUtils.showError(this, "Link can't be empty!");
+            return false;
+        }
+
+        if(sourcesInput.getSelectedItem() == null) {
+            DialogUtils.showError(this, "Source must be selected!");
+            return false;
+        }
+
+        return true;
+    }
+
     private void exportLogic() {
         File file = DialogUtils.chooseSaveFile(this, "xml").orElse(null);
         if(file == null) {
@@ -480,5 +596,20 @@ public class BaseDialog extends JDialog {
         catch (JAXBException exception) {
             DialogUtils.showError(this, "Error occurred..");
         }
+    }
+
+
+    public void setCurrentValues() {
+        titleInput.setText(article.getTitle());
+        linkInput.setText(article.getLink());
+        descriptionInput.setText(article.getDescription());
+
+        sourcesInput.setSelectedItem(article.getSource());
+
+        if(!article.getAuthors().isEmpty()) {
+            authorInput.setSelectedItem(article.getAuthors().getFirst());
+        }
+
+        article.getCategories().forEach(chosenCategoriesModel::addElement);
     }
 }

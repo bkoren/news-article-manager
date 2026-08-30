@@ -75,6 +75,10 @@ public class ArticleRepositoryImpl extends BaseRepository<Article> implements Ar
             return -1;
         }
 
+        if(article.getImagePath() == null) {
+            article.setImagePath("assets\\default.jpg");
+        }
+
         int id = executeInsert(
                 "{call p_Article_Create(?, ?, ?, ?, ?, ?)}",
                 statement -> {
@@ -130,15 +134,14 @@ public class ArticleRepositoryImpl extends BaseRepository<Article> implements Ar
         );
 
         executeUpdate(
-            "{call p_Article_Update(?, ?, ?, ?, ?, ?, ?)}",
+            "{call p_Article_Update(?, ?, ?, ?, ?, ?)}",
             statement -> {
                 statement.setInt(1, article.getArticleId());
                 statement.setInt(2, article.getSourceId());
                 statement.setString(3, article.getTitle());
                 statement.setString(4, article.getDescription());
                 statement.setString(5, article.getLink());
-                statement.setTimestamp(6, Timestamp.valueOf(article.getPublishedAt()));
-                statement.setString(7, article.getImagePath());
+                statement.setString(6, article.getImagePath());
             }
         );
 

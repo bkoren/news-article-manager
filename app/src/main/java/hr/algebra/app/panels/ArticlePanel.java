@@ -133,7 +133,7 @@ public class ArticlePanel extends BasePanel<Article> {
         Article selectedArticle = getSelectedArticle(articleId);
         assert selectedArticle != null;
 
-        BaseDialog editArticleDialog = new BaseDialog(null, "Edit article");
+        BaseDialog editArticleDialog = new BaseDialog(articleRepository, selectedArticle, "Edit article");
 
         JPanel leftColumn = editArticleDialog.buildLeftColumn();
         JPanel rightColumn = editArticleDialog.buildRightColumn();
@@ -149,11 +149,13 @@ public class ArticlePanel extends BasePanel<Article> {
         content.add(bottomContent, BorderLayout.SOUTH);
 
         editArticleDialog.add(content, BorderLayout.CENTER);
+        editArticleDialog.setCurrentValues();
+        editArticleDialog.setLocationRelativeTo(this);
         editArticleDialog.setVisible(true);
     }
 
     private void newArticleLogic() {
-        BaseDialog newArticleDialog = new BaseDialog(null, "New article");
+        BaseDialog newArticleDialog = new BaseDialog(articleRepository, null, "New article");
 
         JPanel leftColumn = newArticleDialog.buildLeftColumn();
         JPanel rightColumn = newArticleDialog.buildRightColumn();
@@ -169,6 +171,7 @@ public class ArticlePanel extends BasePanel<Article> {
         content.add(bottomContent, BorderLayout.SOUTH);
 
         newArticleDialog.add(content, BorderLayout.CENTER);
+        newArticleDialog.setLocationRelativeTo(this);
         newArticleDialog.setVisible(true);
     }
 
@@ -176,7 +179,7 @@ public class ArticlePanel extends BasePanel<Article> {
         Article selectedArticle = getSelectedArticle(articleId);
         assert selectedArticle != null;
 
-        BaseDialog viewArticleDialog = new BaseDialog(selectedArticle, "View article");
+        BaseDialog viewArticleDialog = new BaseDialog(null, selectedArticle, "View article");
 
         viewArticleDialog.buildImageBox(640, 240);
 
@@ -190,6 +193,7 @@ public class ArticlePanel extends BasePanel<Article> {
         contentSection.add(bottomSection, BorderLayout.SOUTH);
 
         viewArticleDialog.add(contentSection, BorderLayout.CENTER);
+        viewArticleDialog.setLocationRelativeTo(this);
         viewArticleDialog.setVisible(true);
     }
 

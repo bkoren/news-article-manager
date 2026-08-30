@@ -1,4 +1,3 @@
-# Compiled output
 *.class
 target/
 
@@ -12,9 +11,9 @@ target/
 *.ipr
 *.iws
 
-# Downloaded assets (keep folder, ignore contents)
+# Downloaded assets 
 assets/*
-!assets/.gitkeep
+!assets/default.jpg
 
 # Credentials / local config
 config.properties
