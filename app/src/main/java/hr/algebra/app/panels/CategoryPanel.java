@@ -120,6 +120,7 @@ public class CategoryPanel extends BasePanel<Category> {
             }
         }));
 
+        newCategoryDialog.setLocationRelativeTo(this);
         newCategoryDialog.setVisible(true);
     }
 
@@ -157,6 +158,7 @@ public class CategoryPanel extends BasePanel<Category> {
             }
         }));
 
+        editCategoryDialog.setLocationRelativeTo(this);
         editCategoryDialog.setVisible(true);
     }
 

@@ -160,6 +160,12 @@ public class ArticlePanel extends BasePanel<Article> {
         JPanel leftColumn = newArticleDialog.buildLeftColumn();
         JPanel rightColumn = newArticleDialog.buildRightColumn();
 
+        if(leftColumn == null) {
+            DialogUtils.showError(this, "No available sources. Please add sources. ");
+
+            return;
+        }
+
         JPanel columns = new JPanel(new GridLayout(1, 2, 5, 0));
         columns.add(leftColumn);
         columns.add(rightColumn);

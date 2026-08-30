@@ -40,13 +40,16 @@ public class BaseDialog extends JDialog {
     private CategoryRepositoryImpl categoryRepository;
     private AuthorRepositoryImpl   authorRepository;
 
+    private AssetService assetService;
+
     private Article article;
 
     private final int DIALOG_WIDTH;
     private final int DIALOG_HEIGHT;
 
     private JLabel imageBox;
-    private String selectedImage;
+    private Path   selectedImagePath;
+    private String selectedImageString;
 
     private JButton           addImgBtn;
     private JTextField        titleInput;
@@ -65,6 +68,8 @@ public class BaseDialog extends JDialog {
     private JList<Category> startCategories;
 
     protected BaseDialog(ArticleRepositoryImpl articleRepository, Article selectedArticle, String dialogTitle) {
+
+
         this.articleRepository = articleRepository;
         this.article = selectedArticle;
 
@@ -89,7 +94,6 @@ public class BaseDialog extends JDialog {
         this.setLayout(new BorderLayout());
         this.setSize(DIALOG_WIDTH, DIALOG_HEIGHT);
         this.setResizable(false);
-        this.setLocationRelativeTo(this);
     }
 
     protected void buildImageBox(int width, int height) {
@@ -124,9 +128,9 @@ public class BaseDialog extends JDialog {
 
     private void SaveImg(Path imgPath) {
         try {
-            AssetService assetService = new AssetService();
+            assetService = new AssetService();
 
-            selectedImage = assetService.saveImgToFolder(imgPath).toString();
+            selectedImageString = assetService.saveImgToFolder(imgPath).toString();
         }
         catch (AssetException | IOException exception) {
             DialogUtils.showError(this, "Error occurred trying to save image.");
@@ -267,11 +271,9 @@ public class BaseDialog extends JDialog {
             if(file.isEmpty()) {
                 return;
             }
-            Path imgPath = file.map(File::toPath).orElseThrow();
+            selectedImagePath = file.map(File::toPath).orElseThrow();
 
-            displayImg(imgPath, 320, 200);
-
-            SaveImg(imgPath);
+            displayImg(selectedImagePath, 320, 200);
         });
 
         JLabel titleLabel = new JLabel("Title");
@@ -312,12 +314,16 @@ public class BaseDialog extends JDialog {
             sourceRepository = new SourceRepositoryImpl();
 
             sourcesInput = buildJComboBox(sourceRepository.read());
+
+            if(sourcesInput.getItemCount() == 0) {
+                return null;
+            }
         }
         catch (SQLException exception) {
-            sourcesInput.removeAllItems();
-            sourcesInput.setEnabled(false);
+            DialogUtils.showError(BaseDialog.this, "Error occurred, sources can't be reached!");
+            this.dispose();
 
-            DialogUtils.showError(this, "Error occurred, sources can't be shown!");
+            return null;
         }
 
         JLabel authorsLabel = new JLabel("Author");
@@ -436,12 +442,14 @@ public class BaseDialog extends JDialog {
                return;
            }
 
+           SaveImg(selectedImagePath);
            if(article == null) {
                callRepository(0);
            }
            else {
                callRepository(article.getArticleId());
            }
+
         });
 
         result.add(saveBtn);
@@ -457,7 +465,7 @@ public class BaseDialog extends JDialog {
                 descriptionInput.getText().trim(),
                 buildLink(),
                 LocalDateTime.now(),
-                selectedImage,
+                selectedImageString,
                 (Source) sourcesInput.getSelectedItem()
         );
 
@@ -482,6 +490,8 @@ public class BaseDialog extends JDialog {
                      return articleRepository.create(articleForDB);
                 }
 
+                assetService.removeImage(article.getImagePath());
+
                 articleRepository.update(articleForDB);
 
                 return 0;
@@ -496,11 +506,12 @@ public class BaseDialog extends JDialog {
                             "Article successfully updated." :
                             "Article successfully created.";
 
-
                     DialogUtils.showInfo(BaseDialog.this, msg);
+                    BaseDialog.this.dispose();
                 }
                 catch (ExecutionException | InterruptedException e) {
                     DialogUtils.showInfo(BaseDialog.this, "Unknown error occurred. ");
+                    BaseDialog.this.dispose();
                 }
             }
 

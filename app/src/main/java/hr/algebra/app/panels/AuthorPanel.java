@@ -120,6 +120,7 @@ public class AuthorPanel extends BasePanel<Author> {
             }
         }));
 
+        newAuthorDialog.setLocationRelativeTo(this);
         newAuthorDialog.setVisible(true);
     }
 
@@ -157,6 +158,7 @@ public class AuthorPanel extends BasePanel<Author> {
             }
         }));
 
+        editAuthorDialog.setLocationRelativeTo(this);
         editAuthorDialog.setVisible(true);
     }
 

@@ -1,6 +1,5 @@
 package hr.algebra.dao.rss;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 public record RssItem(
