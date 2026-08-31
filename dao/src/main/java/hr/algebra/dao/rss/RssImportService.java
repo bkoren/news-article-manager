@@ -37,6 +37,8 @@ public class RssImportService {
 
     private final RssSource[] allSources;
 
+    private int sourceId;
+
     public RssImportService(
             AuthorRepository      authorRepository,
             CategoryRepository    categoryRepository,
@@ -61,7 +63,7 @@ public class RssImportService {
         allSources = RssSource.values();
     }
 
-    public int importFromAll() throws SQLException, ParserConfigurationException, IOException, SAXException {
+    public int importFromAll() throws SQLException, ParserConfigurationException, IOException, SAXException, AssetException {
         int sumOfDownloadedArticles = 0;
         for(RssSource source : allSources) {
             sumOfDownloadedArticles += importFrom(source);
@@ -70,7 +72,12 @@ public class RssImportService {
         return sumOfDownloadedArticles;
     }
 
-    public int importFrom(RssSource source) throws ParserConfigurationException, IOException, SAXException, SQLException {
+    public int importFrom(RssSource source) throws ParserConfigurationException, IOException, SAXException, SQLException, AssetException {
+        List<Article> articles = articleRepository.read(sourceId);
+        for (Article article : articles) {
+            removeImage(article.getImagePath());
+        }
+
         List<Callable<ParsedItem>> tasks = getCallables(source);
 
         List<ParsedItem> parsed = new ArrayList<>();
@@ -142,7 +149,6 @@ public class RssImportService {
                 .findFirst()
                 .orElse(null);
 
-        int sourceId;
         if(sourceFromApp == null) {
             Source source = new Source(
                     0,
