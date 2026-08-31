@@ -33,7 +33,7 @@ public class RssImportService {
     SourceRepositoryImpl     sourceRepository;
     ArticleRepositoryImpl    articleRepository;
 
-    private final List<Source> sources = new ArrayList<>();
+    private List<Source> sourcesFromApp;
 
     private final RssSource[] allSources;
 
@@ -105,6 +105,8 @@ public class RssImportService {
     }
 
     public void importAllSourcesToDB() throws SQLException {
+        sourcesFromApp = new ArrayList<>();
+
         for(RssSource source : allSources) {
             int id = sourceRepository.create(
                     new Source(
@@ -114,7 +116,7 @@ public class RssImportService {
                     )
             );
 
-            sources.add(
+            sourcesFromApp.add(
                     new Source(
                             id,
                             source.getName(),
@@ -131,12 +133,30 @@ public class RssImportService {
 
     private int exportToDB(List<ParsedItem> parsed) throws SQLException {
         int sumOfImports = 0;
-        Source source = (Source) sources.stream()
-                .filter(s -> Objects.equals(s.getName(), parsed.getFirst().source().getName()));
+
+        Source sourceFromApp = sourcesFromApp.stream()
+                .filter(source -> Objects.equals(source.getName(), parsed.getFirst().source().getName()))
+                .findFirst()
+                .orElse(null);
+
+        int sourceId;
+        if(sourceFromApp == null) {
+            sourceId = sourceRepository.create(
+                    new Source(
+                            0,
+                            parsed.getFirst().source().getName(),
+                            parsed.getFirst().source().getFeedUrl()
+                    )
+            );
+        }
+        else {
+            sourceId = sourceFromApp.getSourceId();
+        }
+
 
         for (ParsedItem parsedItem : parsed) {
             Article article = parsedItem.article();
-            article.setSourceId(source.getSourceId());
+            article.setSourceId(sourceId);
 
             List<Author> linkedAuthors = new ArrayList<>();
             for (Author author : parsedItem.authors()) {
@@ -174,6 +194,10 @@ public class RssImportService {
     }
 
     public boolean isThereAnySource() {
-        return sources.isEmpty();
+        return sourcesFromApp.isEmpty();
+    }
+
+    public void clearSources() {
+        sourcesFromApp.clear();
     }
 }

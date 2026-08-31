@@ -397,6 +397,8 @@ public class AdminPanel extends JPanel {
         try {
             setStatusMsg(statusLabelDeleteAll, "Loading...", null);
             adminDeleteWorker.execute();
+
+            importService.clearSources();
         }
         catch (Exception exception) {
             setStatusMsg(statusLabelDeleteAll, "Error occurred!", Color.RED);
