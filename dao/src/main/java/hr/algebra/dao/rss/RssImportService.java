@@ -44,6 +44,7 @@ public class RssImportService {
             ArticleRepositoryImpl articleRepository
     )  {
         mapper = new RssItemMapper();
+        sourcesFromApp = new ArrayList<>();
 
         try {
             asset = new AssetService();
@@ -105,8 +106,6 @@ public class RssImportService {
     }
 
     public void importAllSourcesToDB() throws SQLException {
-        sourcesFromApp = new ArrayList<>();
-
         for(RssSource source : allSources) {
             int id = sourceRepository.create(
                     new Source(
@@ -126,6 +125,10 @@ public class RssImportService {
         }
     }
 
+    public void importAllSourcesToApp() throws SQLException {
+        sourcesFromApp = sourceRepository.read();
+    }
+
     public RssSource[] getAllSources() {
         return allSources;
     }
@@ -141,13 +144,15 @@ public class RssImportService {
 
         int sourceId;
         if(sourceFromApp == null) {
-            sourceId = sourceRepository.create(
-                    new Source(
-                            0,
-                            parsed.getFirst().source().getName(),
-                            parsed.getFirst().source().getFeedUrl()
-                    )
+            Source source = new Source(
+                    0,
+                    parsed.getFirst().source().getName(),
+                    parsed.getFirst().source().getFeedUrl()
             );
+
+            sourceId = sourceRepository.create(source);
+
+            sourcesFromApp.add(source);
         }
         else {
             sourceId = sourceFromApp.getSourceId();
@@ -189,15 +194,28 @@ public class RssImportService {
         return sumOfImports;
     }
 
+
     public boolean isAssetValid() {
         return asset != null;
     }
 
-    public boolean isThereAnySource() {
-        return sourcesFromApp.isEmpty();
-    }
-
     public void clearSources() {
         sourcesFromApp.clear();
+    }
+
+    public int getSourceId(String name) {
+        if(sourcesFromApp.isEmpty()) {
+            return -1;
+        }
+
+        return sourcesFromApp.stream()
+                .filter(source -> Objects.equals(source.getName(), name))
+                .findFirst()
+                .orElseThrow()
+                .getSourceId();
+    }
+
+    public void removeImage(String imagePath) throws AssetException {
+        asset.removeImage(imagePath);
     }
 }

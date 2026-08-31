@@ -113,6 +113,8 @@ public class AdminPanel extends JPanel {
             }
 
             if(!DialogUtils.confirm(this, "This will delete all articles, authors, categories and their images. Continue? ")) {
+                setBusy(false);
+
                 return;
             }
 
@@ -166,6 +168,8 @@ public class AdminPanel extends JPanel {
             }
 
             if(!DialogUtils.confirm(this, "This will delete source and all it's articles. Continue?")) {
+                setBusy(false);
+
                 return;
             }
 
@@ -386,6 +390,7 @@ public class AdminPanel extends JPanel {
         adminDeleteWorker = new AdminDeleteWorker(
                 articleRepository,
                 sourceRepository,
+                null,
                 authorRepository,
                 categoryRepository,
                 null,
@@ -410,6 +415,7 @@ public class AdminPanel extends JPanel {
             adminDeleteWorker = new AdminDeleteWorker(
                     articleRepository,
                     sourceRepository,
+                    importService,
                     null,
                     null,
                     (RssSource) deleteSourcesList.getSelectedItem(),
@@ -433,13 +439,12 @@ public class AdminPanel extends JPanel {
             jComboBox.setSelectedItem(jComboBox.getElementAt(0));
         }
 
-        if(!importService.isThereAnySource()) {
-            try {
-                importService.importAllSourcesToDB();
-            }
-            catch (SQLException exception) {
-                setStatusMsg(statusReloadSources, "Error occurred.", Color.RED);
-            }
+        try {
+            importService.importAllSourcesToDB();
+            importService.importAllSourcesToApp();
+        }
+        catch (SQLException exception) {
+            setStatusMsg(statusReloadSources, "Error occurred.", Color.RED);
         }
 
         threadBusy = false;

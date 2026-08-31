@@ -7,6 +7,7 @@ import hr.algebra.dao.repositories.author.AuthorRepositoryImpl;
 import hr.algebra.dao.repositories.category.CategoryRepositoryImpl;
 import hr.algebra.dao.repositories.source.SourceRepositoryImpl;
 import hr.algebra.dao.rss.AssetService;
+import hr.algebra.dao.rss.RssImportService;
 import hr.algebra.dao.rss.RssSource;
 
 import javax.swing.*;
@@ -18,6 +19,8 @@ import java.util.Objects;
 public class AdminDeleteWorker extends SwingWorker<Integer, String> {
     private JLabel  statusLabel;
     private JButton deleteBtn;
+
+    private RssImportService importService;
 
     private SourceRepositoryImpl  sourceRepository;
     private ArticleRepositoryImpl articleRepository;
@@ -42,6 +45,7 @@ public class AdminDeleteWorker extends SwingWorker<Integer, String> {
     public AdminDeleteWorker(
             ArticleRepositoryImpl articleRepository,
             SourceRepositoryImpl sourceRepository,
+            RssImportService importService,
             AuthorRepositoryImpl authorRepository,
             CategoryRepositoryImpl categoryRepository,
             RssSource source,
@@ -51,6 +55,8 @@ public class AdminDeleteWorker extends SwingWorker<Integer, String> {
     ) {
         this.statusLabel = statusLabel;
         this.deleteBtn   = deleteAllBtn;
+
+        this.importService = importService;
 
         this.source = source;
         this.articleRepository = articleRepository;
@@ -76,9 +82,18 @@ public class AdminDeleteWorker extends SwingWorker<Integer, String> {
     protected Integer doInBackground() {
         try {
             if(source != null) {
-                int sourceId = sourceRepository.delete(source.getName());
+                int sourceId = importService.getSourceId(source.getName());
+                if(sourceId != -1) {
+                    List<Article> articles = articleRepository.read(sourceId);
+                    for (Article article : articles) {
+                        System.out.println(article.getImagePath());
+                        importService.removeImage(article.getImagePath());
+                    }
+                }
 
-                if(sourceId != 0) {
+                int check = sourceRepository.delete(source.getName());
+
+                if(check != 0) {
                     throw new SQLException("Source not found!");
                 }
 
