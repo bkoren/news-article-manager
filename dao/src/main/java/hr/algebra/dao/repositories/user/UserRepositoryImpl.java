@@ -11,12 +11,12 @@ import java.util.List;
 public class UserRepositoryImpl extends BaseRepository<User> implements UserRepository {
 
     @Override
-    protected User map(ResultSet rs) throws SQLException {
+    protected User map(ResultSet databaseResult) throws SQLException {
         return new User(
-                rs.getInt("IDUser"),
-                rs.getString("Username"),
-                rs.getString("PasswordHash"),
-                Role.valueOf(rs.getString("Role"))
+                databaseResult.getInt("IDUser"),
+                databaseResult.getString("Username"),
+                databaseResult.getString("PasswordHash"),
+                Role.valueOf(databaseResult.getString("Role"))
         );
     }
 
@@ -33,9 +33,9 @@ public class UserRepositoryImpl extends BaseRepository<User> implements UserRepo
 
     @Override
     public boolean exists(String username) throws SQLException {
-        return executeRead(
+        return !executeRead(
                 "{call p_User_Exists(?)}",
-                statement -> statement.setString(2, username)
+                statement -> statement.setString(1, username)
         ).isEmpty();
     }
 

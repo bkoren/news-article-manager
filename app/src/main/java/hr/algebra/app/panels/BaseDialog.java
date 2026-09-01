@@ -30,6 +30,7 @@ import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
@@ -118,6 +119,8 @@ public class BaseDialog extends JDialog {
     }
 
     private void displayImg(Path imageFile, int width, int height) {
+        selectedImagePath = imageFile.toAbsolutePath();
+
         ImageIcon originalImage = new ImageIcon(imageFile.toString());
 
         Image scaledImage = originalImage.getImage()
@@ -127,16 +130,23 @@ public class BaseDialog extends JDialog {
     }
 
     private void SaveImg(Path imgPath) {
+        if(imgPath == null) {
+            return;
+        }
+
         try {
             assetService = new AssetService();
 
-            selectedImageString = assetService.saveImgToFolder(imgPath).toString();
+            selectedImageString = imgPath.toString();
+
+            if (!selectedImageString.substring(selectedImageString.lastIndexOf('\\') + 1).equals("default.jpg")) {
+                assetService.saveImgToFolder(imgPath);
+            }
         }
         catch (AssetException | IOException exception) {
             DialogUtils.showError(this, "Error occurred trying to save image.");
         }
     }
-
 
     public JPanel buildTopSection() {
         JPanel result = new JPanel();
@@ -441,17 +451,16 @@ public class BaseDialog extends JDialog {
            if(!ValidateInputs()) {
                return;
            }
-
+           
            SaveImg(selectedImagePath);
+
            if(article == null) {
                callRepository(0);
            }
            else {
                callRepository(article.getArticleId());
            }
-
         });
-
         result.add(saveBtn);
 
         return result;
@@ -521,38 +530,53 @@ public class BaseDialog extends JDialog {
 
     private void buildStartEvents() {
         startCategories.addMouseListener(new MouseAdapter() {
+            Category category;
+
             @Override
-            public void mouseClicked(MouseEvent e) {
-                targetCategories.getSelectionModel().clearSelection();
+            public void mousePressed(MouseEvent event) {
+                category = startCategories.getSelectedValue();
             }
 
             @Override
-            public void mouseReleased(MouseEvent e) {
-                super.mouseReleased(e);
-            }
+            public void mouseReleased(MouseEvent event) {
+                if (category == null) {
+                    return;
+                }
+                Point dropPoint = SwingUtilities.convertPoint(startCategories, event.getPoint(), targetCategories);
 
-            @Override
-            public void mouseExited(MouseEvent e) {
-                super.mouseExited(e);
-            }
-
-            @Override
-            public void mouseDragged(MouseEvent e) {
-                super.mouseDragged(e);
+                if (targetCategories.contains(dropPoint)) {
+                    targetCategoriesModel.addElement(category);
+                    startCategoriesModel.removeElement(category);
+                }
             }
         });
     }
 
     private void buildTargetEvents() {
         targetCategories.addMouseListener(new MouseAdapter() {
+            Category category;
+
             @Override
             public void mouseClicked(MouseEvent e) {
                 startCategories.getSelectionModel().clearSelection();
             }
 
             @Override
-            public void mouseReleased(MouseEvent e) {
-                super.mouseReleased(e);
+            public void mousePressed(MouseEvent event) {
+                category = targetCategories.getSelectedValue();
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent event) {
+                if (category == null) {
+                    return;
+                }
+                Point dropPoint = SwingUtilities.convertPoint(targetCategories, event.getPoint(), startCategories);
+
+                if (startCategories.contains(dropPoint)) {
+                    startCategoriesModel.addElement(category);
+                    targetCategoriesModel.removeElement(category);
+                }
             }
 
             @Override
@@ -604,8 +628,6 @@ public class BaseDialog extends JDialog {
 
     private JList<Category> buildCategoryJList(DefaultListModel<Category> model) {
         JList<Category> result = new JList<>(model);
-        result.setDragEnabled(true);
-        result.setDropMode(DropMode.INSERT);
         result.setVisibleRowCount(15);
         result.setCellRenderer(new DefaultListCellRenderer() {
             @Override

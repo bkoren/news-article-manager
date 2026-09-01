@@ -27,10 +27,6 @@ public class AssetService {
     }
 
     private String generateId(String img, String imgExt) {
-        if(img == null) {
-            return null;
-        }
-
         if(imgExt == null) {
             imgExt = img.substring(img.lastIndexOf('.') + 1);
         }
@@ -40,10 +36,11 @@ public class AssetService {
 
 
     public String downloadImage(String imgUrl, String imgExt) throws IOException {
-        String id = generateId(imgUrl, imgExt);
-        if(id == null)
+        if(imgUrl == null) {
             return null;
+        }
 
+        String id = generateId(imgUrl, imgExt);
         URI url;
         try {
             url = URI.create(imgUrl);
@@ -74,13 +71,12 @@ public class AssetService {
         }
     }
 
-    public Path saveImgToFolder(Path imgPath) throws IOException {
-        String id = generateId(imgPath.toString(), null);
+    public void saveImgToFolder(Path imgPath) throws IOException {
+         String id = generateId(imgPath.toString(), null);
 
         Path target = FOLDER.resolve(id);
         Files.copy(imgPath, target);
 
-        return target;
     }
 
     public void removeImage(String imagePath) throws AssetException {
@@ -90,6 +86,10 @@ public class AssetService {
 
         Path file = Paths.get(imagePath);
         try {
+            if(!Files.exists(file)) {
+                return;
+            }
+
             if(!file.getFileName().toString().equals("default.jpg")) {
                 Files.delete(file);
             }

@@ -120,10 +120,6 @@ public abstract class BaseRepository<T> {
         listeners.add(listener);
     }
 
-    public void removeListener(Runnable listener) {
-        listeners.remove(listener);
-    }
-
     public void triggerListeners() {
         SwingUtilities.invokeLater(() -> {
             for(Runnable listener : listeners) {

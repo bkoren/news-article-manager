@@ -465,9 +465,9 @@ public class AdminPanel extends JPanel {
                 adminLoadWorker.execute();
             }
             else if (Objects.equals(buttonGroup.getSelection().getActionCommand(), "one")) {
-                SourceRepositoryImpl sourceRepository = new SourceRepositoryImpl();
-
                 RssSource selectedItem = (RssSource) loadSourcesList.getSelectedItem();
+                assert selectedItem != null;
+
                 List<Source> sources = sourceRepository.read();
                 if(sources.contains(new Source(0, selectedItem.getName(), selectedItem.getFeedUrl()))) {
                     AdminDeleteWorker deleteSource = new AdminDeleteWorker(selectedItem.getFeedUrl());

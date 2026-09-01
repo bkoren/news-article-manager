@@ -29,6 +29,7 @@ public class MainWindow extends JFrame{
     JButton  adminMenu;
 
     private final User user;
+
     public MainWindow(User user) {
         this.user = user;
 

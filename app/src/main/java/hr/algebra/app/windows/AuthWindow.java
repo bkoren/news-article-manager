@@ -108,7 +108,7 @@ public class AuthWindow extends JFrame {
     private void loginLogic() {
         String username = loginPanel.getUsername();
         try {
-            if(userRepository.exists(username)) {
+            if(!userRepository.exists(username)) {
                 DialogUtils.showError(this, "Invalid username or password.");
                 return;
             }
@@ -131,6 +131,7 @@ public class AuthWindow extends JFrame {
 
     private void OpenMainWindow(User user) {
         MainWindow mainWindow = new MainWindow(user);
+        mainWindow.setLocationRelativeTo(this);
         mainWindow.setVisible(true);
     }
 }

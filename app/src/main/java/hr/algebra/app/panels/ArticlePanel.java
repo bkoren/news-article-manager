@@ -3,7 +3,6 @@ package hr.algebra.app.panels;
 import hr.algebra.dao.exceptions.AssetException;
 import hr.algebra.dao.models.Article;
 import hr.algebra.dao.repositories.article.ArticleRepositoryImpl;
-import hr.algebra.dao.rss.RssSource;
 import hr.algebra.utilities.gui.DialogUtils;
 
 import javax.swing.*;
@@ -90,7 +89,7 @@ public class ArticlePanel extends BasePanel<Article> {
             try {
                 int articleId  = (Integer) tableModel.getValueAt(entityData.getSelectedRow(), 0);
 
-                deleteArticleLogic(articleId);
+                deleteArticleLogic();
             }
             catch (ArrayIndexOutOfBoundsException exception) {
                 DialogUtils.showError(this, "No article selected. Please select an article");
@@ -212,9 +211,9 @@ public class ArticlePanel extends BasePanel<Article> {
         searchField.setText("");
     }
 
-    private void deleteArticleLogic(int articleId) {
+    private void deleteArticleLogic() {
         try {
-            if(DialogUtils.confirm(this, "Are you sure you want to delete " + articleId + "?")) {
+            if(DialogUtils.confirm(this, "Are you sure you want to delete?")) {
                 articleRepository.delete((Integer) tableModel.getValueAt(entityData.getSelectedRow(), 0));
 
                 articleRepository.triggerAuthors();
