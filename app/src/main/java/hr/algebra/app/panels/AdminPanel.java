@@ -468,11 +468,13 @@ public class AdminPanel extends JPanel {
                 RssSource selectedItem = (RssSource) loadSourcesList.getSelectedItem();
                 assert selectedItem != null;
 
-                List<Source> sources = sourceRepository.read();
-                if(sources.contains(new Source(0, selectedItem.getName(), selectedItem.getFeedUrl()))) {
-                    AdminDeleteWorker deleteSource = new AdminDeleteWorker(selectedItem.getFeedUrl());
-                    deleteSource.execute();
-                }
+                adminDeleteWorker = new AdminDeleteWorker(
+                        articleRepository,
+                        sourceRepository,
+                        importService,
+                        selectedItem
+                );
+                adminDeleteWorker.execute();
 
                 adminLoadWorker.setSource(selectedItem);
                 adminLoadWorker.execute();

@@ -17,7 +17,13 @@ public class AdminLoadWorker extends SwingWorker<Integer, String> {
     private final JLabel  statusLabel;
     private final JButton loadBtn;
 
-    public AdminLoadWorker(RssImportService service, JComboBox<RssSource> sources, ButtonGroup buttonGroup, JLabel statusLabel, JButton loadBtn) {
+    public AdminLoadWorker(
+            RssImportService service,
+            JComboBox<RssSource> sources,
+            ButtonGroup buttonGroup,
+            JLabel statusLabel,
+            JButton loadBtn)
+    {
         this.statusLabel     = statusLabel;
         this.service         = service;
         this.loadBtn         = loadBtn;

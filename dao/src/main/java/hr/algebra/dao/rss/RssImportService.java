@@ -73,10 +73,10 @@ public class RssImportService {
     }
 
     public int importFrom(RssSource source) throws ParserConfigurationException, IOException, SAXException, SQLException, AssetException {
-        List<Article> articles = articleRepository.read(sourceId);
+        /*List<Article> articles = articleRepository.read(sourceId);
         for (Article article : articles) {
             removeImage(article.getImagePath());
-        }
+        }*/
 
         List<Callable<ParsedItem>> tasks = getCallables(source);
 
@@ -144,26 +144,16 @@ public class RssImportService {
     private int exportToDB(List<ParsedItem> parsed) throws SQLException {
         int sumOfImports = 0;
 
+        importAllSourcesToDB();
+        importAllSourcesToApp();
+
         Source sourceFromApp = sourcesFromApp.stream()
                 .filter(source -> Objects.equals(source.getName(), parsed.getFirst().source().getName()))
                 .findFirst()
                 .orElse(null);
 
-        if(sourceFromApp == null) {
-            Source source = new Source(
-                    0,
-                    parsed.getFirst().source().getName(),
-                    parsed.getFirst().source().getFeedUrl()
-            );
 
-            sourceId = sourceRepository.create(source);
-
-            sourcesFromApp.add(source);
-        }
-        else {
-            sourceId = sourceFromApp.getSourceId();
-        }
-
+        sourceId = sourceFromApp.getSourceId();
 
         for (ParsedItem parsedItem : parsed) {
             Article article = parsedItem.article();
@@ -209,9 +199,9 @@ public class RssImportService {
         sourcesFromApp.clear();
     }
 
-    public int getSourceId(String name) {
+    public int getSourceId(String name) throws SQLException {
         if(sourcesFromApp.isEmpty()) {
-            return -1;
+            importAllSourcesToApp();
         }
 
         return sourcesFromApp.stream()

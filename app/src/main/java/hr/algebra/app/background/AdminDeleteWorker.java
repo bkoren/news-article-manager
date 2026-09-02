@@ -32,12 +32,17 @@ public class AdminDeleteWorker extends SwingWorker<Integer, String> {
     private List<DefaultComboBoxModel<RssSource>> listOfJComboBoxes;
     private final boolean usageFromBackend;
 
-    public AdminDeleteWorker(String feedUrl) {
-        for (RssSource rssSource : RssSource.values()) {
-            if(Objects.equals(rssSource.getFeedUrl(),feedUrl)) {
-                this.source = rssSource;
-            }
-        }
+    public AdminDeleteWorker(
+            ArticleRepositoryImpl articleRepository,
+            SourceRepositoryImpl sourceRepository,
+            RssImportService importService,
+            RssSource source
+    ) {
+        this.articleRepository = articleRepository;
+        this.sourceRepository = sourceRepository;
+        this.importService = importService;
+
+        this.source = source;
 
         this.usageFromBackend = true;
     }
@@ -83,19 +88,12 @@ public class AdminDeleteWorker extends SwingWorker<Integer, String> {
         try {
             if(source != null) {
                 int sourceId = importService.getSourceId(source.getName());
-                if(sourceId != -1) {
-                    List<Article> articles = articleRepository.read(sourceId);
-                    for (Article article : articles) {
-                        System.out.println(article.getImagePath());
-                        importService.removeImage(article.getImagePath());
-                    }
+                List<Article> articles = articleRepository.read(sourceId);
+                for (Article article : articles) {
+                    importService.removeImage(article.getImagePath());
                 }
 
-                int check = sourceRepository.delete(source.getName());
-
-                if(check != 0) {
-                    throw new SQLException("Source not found!");
-                }
+                sourceRepository.delete(source.getName());
 
                 articleRepository.triggerListeners();
                 articleRepository.triggerAuthors();
