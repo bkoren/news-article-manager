@@ -12,5 +12,5 @@ GO
 CREATE USER news_app FOR LOGIN news_app;
 GO
 
-GRANT EXECUTE ON SCHEMA::dbo TO news_app;
+ALTER ROLE db_owner ADD MEMBER news_app;
 GO

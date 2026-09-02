@@ -1,3 +1,6 @@
+USE NewsAppDb;
+GO
+
 CREATE TABLE [dbo].[Source] 
 (
     [IDSource]  INT IDENTITY(1,1) NOT NULL,
@@ -78,12 +81,12 @@ CREATE TABLE [dbo].[User]
     [IDUser]		INT IDENTITY(1,1) NOT NULL,
     [Username]		NVARCHAR(50)      NOT NULL,
     [PasswordHash]	NVARCHAR(255)     NOT NULL,
-    [Role]			NVARCHAR(10)      NOT NULL,
+    [Role]			NVARCHAR(10)      NOT NULL
+		DEFAULT (N'USER')
   
 	CONSTRAINT PK_User			PRIMARY KEY ([IDUser]),
     CONSTRAINT UQ_User_Username UNIQUE		([Username]),
-    CONSTRAINT CK_User_Role		CHECK		([Role] IN (N'ADMIN', N'USER')),
-	CONSTRAINT DF_User_Role		DEFAULT		(N'USER') FOR [Role]
+    CONSTRAINT CK_User_Role		CHECK		([Role] IN (N'ADMIN', N'USER'))
 );
 GO
 

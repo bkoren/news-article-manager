@@ -30,7 +30,10 @@ BEGIN
 	SET NOCOUNT ON;
 		
 	SELECT
-		[IDUser]
+		[IDUser],
+		[Username],
+		[PasswordHash],
+		[Role]
 	FROM
 		[dbo].[User]
 	WHERE 
@@ -46,8 +49,10 @@ BEGIN
     SET NOCOUNT ON;                                 
 	
 	IF EXISTS(SELECT 1 FROM [dbo].[User] WHERE [Username] = @Username)
-	PRINT('Admin already exists.');
-	RETURN;
+	BEGIN
+		PRINT('Admin already exists.');
+		RETURN;
+	END;
    
     INSERT INTO [dbo].[User] 
 		([Username], [PasswordHash], [Role])
