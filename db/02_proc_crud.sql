@@ -179,7 +179,7 @@ BEGIN
 END;
 GO
 
-CREATE OR ALTER PROC [dbo].[p_ArticleClearAuthors]
+CREATE OR ALTER PROC [dbo].[p_Article_ClearAuthors]
 	@ArticleID INT
 AS
 BEGIN
