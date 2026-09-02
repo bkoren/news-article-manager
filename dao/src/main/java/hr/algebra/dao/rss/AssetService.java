@@ -71,17 +71,22 @@ public class AssetService {
         }
     }
 
-    public void saveImgToFolder(Path imgPath) throws IOException {
-         String id = generateId(imgPath.toString(), null);
+    public String saveImgToFolder(Path imgPath) throws IOException {
+        String id = generateId(imgPath.toString(), null);
 
         Path target = FOLDER.resolve(id);
         Files.copy(imgPath, target);
 
+        return id;
     }
 
     public void removeImage(String imagePath) throws AssetException {
         if(imagePath == null) {
             return;
+        }
+
+        if(!imagePath.contains("assets\\")) {
+            imagePath = "assets\\" + imagePath;
         }
 
         Path file = Paths.get(imagePath);

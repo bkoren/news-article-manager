@@ -140,7 +140,7 @@ public class BaseDialog extends JDialog {
             selectedImageString = imgPath.toString();
 
             if (!selectedImageString.substring(selectedImageString.lastIndexOf('\\') + 1).equals("default.jpg")) {
-                assetService.saveImgToFolder(imgPath);
+                selectedImageString = assetService.saveImgToFolder(imgPath);
             }
         }
         catch (AssetException | IOException exception) {
@@ -740,6 +740,14 @@ public class BaseDialog extends JDialog {
             authorInput.setSelectedItem(article.getAuthors().getFirst());
         }
 
-        article.getCategories().forEach(targetCategoriesModel::addElement);
+        List<Category> categories = article.getCategories();
+        for(Category category : categories) {
+            if(startCategoriesModel.contains(category)) {
+                startCategoriesModel.removeElement(category);
+            }
+
+            targetCategoriesModel.addElement(category);
+        }
+
     }
 }

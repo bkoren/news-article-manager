@@ -46,7 +46,7 @@ Open a command prompt in the project root folder and run:
 sqlcmd -S localhost -E -i db/00_provision.sql
 sqlcmd -S localhost -E -i db/01_init.sql
 sqlcmd -S localhost -E -i db/02_proc_crud.sql
-sqlcmd -S localhost -E -i db/03_proc_delete.sql
+sqlcmd -S localhost -E -i db/03_proc_delete_all.sql
 sqlcmd -S localhost -E -i db/04_proc_user.sql
 ```
 

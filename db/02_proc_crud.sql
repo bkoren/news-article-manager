@@ -62,7 +62,6 @@ CREATE OR ALTER PROC [dbo].[p_Article_Update]
     @Title       NVARCHAR(300),
     @Description NVARCHAR(MAX) = NULL,
     @Link        NVARCHAR(500),
-    @PublishedAt DATETIME2	   = NULL,
     @ImagePath   NVARCHAR(300) = NULL
 AS
 BEGIN
@@ -73,8 +72,7 @@ BEGIN
 		[SourceID]    = @SourceID,
         [Title]       = @Title,
         [Description] = @Description,
-        [Link]        = @Link,
-        [PublishedAt] = @PublishedAt,
+        [Link]        = @Link,       
         [ImagePath]   = @ImagePath
     WHERE 
 		[IDArticle] = @ArticleID;  
@@ -178,6 +176,22 @@ BEGIN
 	WHERE
 		[ac].[ArticleID] = @ArticleID
 
+END;
+GO
+
+CREATE OR ALTER PROC [dbo].[p_ArticleClearAuthors]
+	@ArticleID INT
+AS
+BEGIN
+	DELETE FROM [dbo].[ArticleAuthor] WHERE [ArticleID] = @ArticleID
+END;
+GO
+
+CREATE OR ALTER PROC [dbo].[p_Article_ClearCategories]
+	@ArticleID INT
+AS
+BEGIN
+	DELETE FROM [dbo].[ArticleCategory] WHERE [ArticleID] = @ArticleID
 END;
 GO
 
