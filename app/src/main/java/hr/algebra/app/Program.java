@@ -10,7 +10,7 @@ import javax.swing.*;
 import java.sql.SQLException;
 
 public class Program {
-    public static void main(String[] args) throws SQLException {
+    public static void main(String[] args){
         FlatDarkLaf.setup();
         UIManager.put("Component.arc", 8);
         UIManager.put("Button.arc", 999);

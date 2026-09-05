@@ -80,7 +80,9 @@ public class AdminDeleteWorker extends SwingWorker<Integer, String> {
             deleteBtn.setEnabled(true);
         }
 
-        AdminPanel.setBusy(false);
+        if(!usageFromBackend) {
+            AdminPanel.setBusy(false);
+        }
     }
 
     @Override

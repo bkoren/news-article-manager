@@ -153,6 +153,7 @@ public class RssImportService {
                 .orElse(null);
 
 
+        assert sourceFromApp != null;
         sourceId = sourceFromApp.getSourceId();
 
         for (ParsedItem parsedItem : parsed) {
