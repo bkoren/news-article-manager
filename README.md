@@ -8,6 +8,8 @@ You log in with a user account; administrators can also load new articles from
 the feeds. Setting it up means: create the database, tell the app how to connect
 to it, then build and run.
 
+Built as a second-year project for the course Programming in Java 1 at Algebra University, Zagreb.
+
 ## Requirements
 
 - JDK 21
