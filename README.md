@@ -1,4 +1,4 @@
-# News Article Manager (Programiranje u Javi 1)
+# News Article Manager (Programming in Java 1)
 
 Desktop Swing application for managing news articles.
 
