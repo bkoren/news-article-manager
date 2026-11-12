@@ -63,10 +63,12 @@ Articles are loaded from public NASA RSS feeds.
 
 ## Setup
 
-### 1 Clone the repository
+### 1. Clone the repository
 
+```
 git clone https://github.com/bkoren/news-article-manager.git
 cd news-article-manager
+```
 
 ### 2. Choose a database password
 
