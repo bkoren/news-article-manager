@@ -2,7 +2,7 @@
 
 Desktop Swing application for managing news articles.
 
-**Summary:** the app downloads articles from RSS feeds, saves them into a local
+**Summary:** The application retrieves articles from RSS feeds, saves them into a local
 MS SQL Server database, and lets you browse and manage them in a desktop window.
 You log in with a user account; administrators can also load new articles from
 the feeds. Setting it up means: create the database, tell the app how to connect
