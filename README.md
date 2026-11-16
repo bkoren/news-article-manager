@@ -50,9 +50,8 @@ Built as a project for the course Programming in Java 1 at Algebra University, Z
 
 Articles are loaded from public NASA RSS feeds.
 
-> ⚠️ **Note:** These feeds are run by NASA, not by me. They may change, move,
-> or go offline in the future. If loading fails, the feed addresses in the
-> project may need to be updated.
+> ⚠️ **Note:** These feeds are not run by me. They may change, move,
+> or go offline in the future.
 
 ## Requirements
 
