@@ -133,6 +133,3 @@ mvn -pl app exec:java
 1. Log in with the seeded admin account: username `admin`, password `Admin123!`
 2. Open **Admin -> Load new articles** to fill the database with articles and
    images from the RSS feeds.
-
-> 💡 This is a default password for local testing. Change it if you use the
-> app outside your own computer.
